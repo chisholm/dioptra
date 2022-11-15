@@ -243,6 +243,9 @@ def init_pt_flow() -> Flow:
             "load_wrapped_tensorflow_keras_classifier",
             name=model_name,
             version=model_version,
+            classifier_kwargs=dict(
+                clip_values=(0,1),
+            ),
             upstream_tasks=[init_tensorflow_results],
         )
         distance_metrics_list = pyplugs.call_task(
