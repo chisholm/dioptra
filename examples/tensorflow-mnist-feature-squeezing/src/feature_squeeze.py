@@ -27,24 +27,21 @@ tf.compat.v1.disable_eager_execution()
 
 import click
 import mlflow
-import mlflow.tensorflow
 import numpy as np
 import structlog
-import pandas as pd
 import os
 from pathlib import Path
 
 from data import create_image_dataset, download_image_archive
 from log import configure_stdlib_logger, configure_structlog_logger
-from models import load_model_in_registry
 from tensorflow.keras.preprocessing.image import save_img
 from art.defences.preprocessor import FeatureSqueezing
 from typing import Dict, List
 
 from prefect import Flow, Parameter, task
-from mitre.securingai import pyplugs
-from mitre.securingai.sdk.utilities.contexts import plugin_dirs
-from mitre.securingai.sdk.utilities.logging import (
+from dioptra import pyplugs
+from dioptra.sdk.utilities.contexts import plugin_dirs
+from dioptra.sdk.utilities.logging import (
     StderrLogStream,
     StdoutLogStream,
     attach_stdout_stream_handler,
@@ -53,8 +50,8 @@ from mitre.securingai.sdk.utilities.logging import (
     set_logging_level,
 )
 
-_CUSTOM_PLUGINS_IMPORT_PATH: str = "securingai_custom"
-_PLUGINS_IMPORT_PATH: str = "securingai_builtins"
+_CUSTOM_PLUGINS_IMPORT_PATH: str = "dioptra_custom"
+_PLUGINS_IMPORT_PATH: str = "dioptra_builtins"
 DISTANCE_METRICS: List[Dict[str, str]] = [
     {"name": "l_infinity_norm", "func": "l_inf_norm"},
     {"name": "l_1_norm", "func": "l_1_norm"},

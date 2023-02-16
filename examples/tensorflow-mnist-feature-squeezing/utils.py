@@ -21,33 +21,26 @@ from typing import Any, Dict, List, Optional, Union
 from urllib.parse import urlparse, urlunparse
 
 import requests
-from IPython.display import HTML, Image
-
+from IPython.display import HTML
 
 PathLike = List[Union[str, Path]]
 
 
-class SecuringAIClient(object):
-    def __init__(self, address: str) -> None:
+class DioptraClient(object):
+    def __init__(self, address: Optional[str] = None) -> None:
+        address = f"{address}/api" if address else f"{os.environ['DIOPTRA_RESTAPI_URI']}/api"
         self._scheme, self._netloc, self._path, _, _, _ = urlparse(address)
 
     @property
     def experiment_endpoint(self) -> str:
         return urlunparse(
-            (
-                self._scheme,
-                self._netloc,
-                os.path.join(self._path, "experiment/"),
-                "",
-                "",
-                "",
-            )
+            (self._scheme, self._netloc, urljoin(self._path, "experiment/"), "", "", "")
         )
 
     @property
     def job_endpoint(self) -> str:
         return urlunparse(
-            (self._scheme, self._netloc, os.path.join(self._path, "job/"), "", "", "")
+            (self._scheme, self._netloc, urljoin(self._path, "job/"), "", "", "")
         )
 
     @property
@@ -62,7 +55,7 @@ class SecuringAIClient(object):
             (
                 self._scheme,
                 self._netloc,
-                urljoin(self._path, "taskPlugin/securingai_builtins"),
+                urljoin(self._path, "taskPlugin/dioptra_builtins"),
                 "",
                 "",
                 "",
@@ -75,7 +68,7 @@ class SecuringAIClient(object):
             (
                 self._scheme,
                 self._netloc,
-                urljoin(self._path, "taskPlugin/securingai_custom"),
+                urljoin(self._path, "taskPlugin/dioptra_custom"),
                 "",
                 "",
                 "",
@@ -93,24 +86,16 @@ class SecuringAIClient(object):
         return requests.delete(plugin_name_query).json()
 
     def get_experiment_by_id(self, id: int):
-        experiment_id_query: str = os.path.join(self.experiment_endpoint, str(id))
+        experiment_id_query: str = urljoin(self.experiment_endpoint, str(id))
         return requests.get(experiment_id_query).json()
 
     def get_experiment_by_name(self, name: str):
-        experiment_name_query: str = os.path.join(
-            self.experiment_endpoint, "name", name
-        )
+        experiment_name_query: str = urljoin(self.experiment_endpoint, "name", name)
         return requests.get(experiment_name_query).json()
 
     def get_job_by_id(self, id: str):
-        job_id_query: str = os.path.join(self.job_endpoint, id)
+        job_id_query: str = urljoin(self.job_endpoint, id)
         return requests.get(job_id_query).json()
-
-    def list_experiments(self) -> List[Dict[str, Any]]:
-        return requests.get(self.experiment_endpoint).json()
-
-    def list_jobs(self) -> List[Dict[str, Any]]:
-        return requests.get(self.job_endpoint).json()
 
     def get_queue_by_id(self, id: int):
         queue_id_query: str = urljoin(self.queue_endpoint, str(id))
@@ -154,11 +139,12 @@ class SecuringAIClient(object):
         queue_name_query: str = urljoin(self.queue_endpoint, "name", name, "lock")
         return requests.delete(queue_name_query).json()
 
-    def register_experiment(self, name: str,) -> Dict[str, Any]:
+    def register_experiment(self, name: str) -> Dict[str, Any]:
         experiment_registration_form = {"name": name}
 
         response = requests.post(
-            self.experiment_endpoint, data=experiment_registration_form,
+            self.experiment_endpoint,
+            data=experiment_registration_form,
         )
 
         return response.json()
@@ -166,7 +152,10 @@ class SecuringAIClient(object):
     def register_queue(self, name: str = "tensorflow_cpu") -> Dict[str, Any]:
         queue_registration_form = {"name": name}
 
-        response = requests.post(self.queue_endpoint, data=queue_registration_form,)
+        response = requests.post(
+            self.queue_endpoint,
+            data=queue_registration_form,
+        )
 
         return response.json()
 
@@ -197,7 +186,11 @@ class SecuringAIClient(object):
 
         with workflows_file.open("rb") as f:
             job_files = {"workflow": (workflows_file.name, f)}
-            response = requests.post(self.job_endpoint, data=job_form, files=job_files,)
+            response = requests.post(
+                self.job_endpoint,
+                data=job_form,
+                files=job_files,
+            )
 
         return response.json()
 
@@ -205,7 +198,7 @@ class SecuringAIClient(object):
         self,
         custom_plugin_name: str,
         custom_plugin_file: PathLike,
-        collection: str = "securingai_custom",
+        collection: str = "dioptra_custom",
     ) -> Dict[str, Any]:
         plugin_upload_form = {
             "task_plugin_name": custom_plugin_name,
