@@ -27,9 +27,10 @@ from flask_sqlalchemy import SQLAlchemy
 from freezegun import freeze_time
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.models import Queue
+from dioptra.restapi.models import Queue, QueueRegistrationForm
 from dioptra.restapi.queue.routes import BASE_ROUTE as QUEUE_BASE_ROUTE
 from dioptra.restapi.queue.service import QueueService
+from dioptra.restapi.queue.errors import QueueRegistrationError, QueueDoesNotExistError
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -107,6 +108,31 @@ def test_queue_resource_post(
         assert response == expected
 
 
+def test_queue_resource_post_registration_error(
+    app: Flask,
+    db: SQLAlchemy,
+    queue_registration_request: Dict[str, Any],
+    monkeypatch: MonkeyPatch,
+) -> None:
+    def mockvalidateonsubmit(*args, **kwargs) -> bool:
+        LOGGER.info("Mocking QueueRegistrationForm.validate_on_submit())")
+        return False
+
+    monkeypatch.setattr(QueueRegistrationForm, "validate_on_submit", mockvalidateonsubmit)
+
+    with app.test_client() as client:
+        response: Dict[str, Any] = client.post(
+            f"/api/{QUEUE_BASE_ROUTE}/",
+            content_type="multipart/form-data",
+            data=queue_registration_request,
+            follow_redirects=True,
+        )
+        LOGGER.info("Response received", response=response)
+
+        assert response._status_code == 400
+        pytest.raises(QueueRegistrationError)
+
+
 def test_queue_id_resource_get(app: Flask, monkeypatch: MonkeyPatch) -> None:
     def mockgetbyid(self, queue_id: str, *args, **kwargs) -> Queue:
         LOGGER.info("Mocking QueueService.get_by_id()")
@@ -133,6 +159,23 @@ def test_queue_id_resource_get(app: Flask, monkeypatch: MonkeyPatch) -> None:
         }
 
         assert response == expected
+
+
+def test_queue_id_resource_get_non_existing_error(app: Flask, monkeypatch: MonkeyPatch) -> None:
+    def mockgetbyid(self, queue_id: str, *args, **kwargs) -> Queue:
+        LOGGER.info("Mocking QueueService.get_by_id()")
+        return None
+
+    monkeypatch.setattr(QueueService, "get_by_id", mockgetbyid)
+    queue_id: int = 1
+
+    with app.test_client() as client:
+        response: Dict[str, Any] = client.get(
+            f"/api/{QUEUE_BASE_ROUTE}/{queue_id}"
+        )
+
+        assert response._status_code == 404
+        pytest.raises(QueueDoesNotExistError)
 
 
 def test_queue_id_resource_put(app: Flask, monkeypatch: MonkeyPatch) -> None:
@@ -170,6 +213,25 @@ def test_queue_id_resource_put(app: Flask, monkeypatch: MonkeyPatch) -> None:
         }
 
         assert response == expected
+
+
+def test_queue_id_resource_put_non_existing_error(app: Flask, monkeypatch: MonkeyPatch) -> None:
+    def mockgetbyid(self, queue_id: str, *args, **kwargs) -> Queue:
+        LOGGER.info("Mocking QueueService.get_by_id()")
+        return None
+
+    monkeypatch.setattr(QueueService, "get_by_id", mockgetbyid)
+    queue_id: int = 1
+    payload: Dict[str, Any] = {"name": "tf_cpu"}
+
+    with app.test_client() as client:
+        response: Dict[str, Any] = client.put(
+            f"/api/{QUEUE_BASE_ROUTE}/{queue_id}",
+            json=payload,
+        )
+
+        assert response._status_code == 404
+        pytest.raises(QueueDoesNotExistError)
 
 
 def test_queue_id_resource_delete(app: Flask, monkeypatch: MonkeyPatch) -> None:
@@ -224,6 +286,23 @@ def test_queue_id_lock_resource_delete(app: Flask, monkeypatch: MonkeyPatch) -> 
         assert response == expected
 
 
+def test_queue_id_lock_resource_delete_non_existing_error(app: Flask, monkeypatch: MonkeyPatch) -> None:
+    def mockgetbyid(self, queue_id: str, *args, **kwargs) -> Queue:
+        LOGGER.info("Mocking QueueService.get_by_id()")
+        return None
+
+    monkeypatch.setattr(QueueService, "get_by_id", mockgetbyid)
+    queue_id: int = 1
+
+    with app.test_client() as client:
+        response: Dict[str, Any] = client.delete(
+            f"/api/{QUEUE_BASE_ROUTE}/{queue_id}/lock"
+        )
+
+        assert response._status_code == 404
+        pytest.raises(QueueDoesNotExistError)
+
+
 def test_queue_id_lock_resource_put(app: Flask, monkeypatch: MonkeyPatch) -> None:
     def mockgetbyid(self, queue_id: str, *args, **kwargs) -> Queue:
         LOGGER.info("Mocking QueueService.get_by_id()")
@@ -255,6 +334,23 @@ def test_queue_id_lock_resource_put(app: Flask, monkeypatch: MonkeyPatch) -> Non
         assert response == expected
 
 
+def test_queue_id_lock_resource_put_non_existing_error(app: Flask, monkeypatch: MonkeyPatch) -> None:
+    def mockgetbyid(self, queue_id: str, *args, **kwargs) -> Queue:
+        LOGGER.info("Mocking QueueService.get_by_id()")
+        return None
+
+    monkeypatch.setattr(QueueService, "get_by_id", mockgetbyid)
+    queue_id: int = 1
+
+    with app.test_client() as client:
+        response: Dict[str, Any] = client.put(
+            f"/api/{QUEUE_BASE_ROUTE}/{queue_id}/lock"
+        )
+
+        assert response._status_code == 404
+        pytest.raises(QueueDoesNotExistError)
+
+
 def test_queue_name_resource_get(app: Flask, monkeypatch: MonkeyPatch) -> None:
     def mockgetbyname(self, queue_name: str, *args, **kwargs) -> Queue:
         LOGGER.info("Mocking QueueService.get_by_name()")
@@ -281,6 +377,23 @@ def test_queue_name_resource_get(app: Flask, monkeypatch: MonkeyPatch) -> None:
         }
 
         assert response == expected
+
+
+def test_queue_name_resource_get_non_existing_error(app: Flask, monkeypatch: MonkeyPatch) -> None:
+    def mockgetbyname(self, queue_name: str, *args, **kwargs) -> Queue:
+        LOGGER.info("Mocking QueueService.get_by_name()")
+        return None
+
+    monkeypatch.setattr(QueueService, "get_by_name", mockgetbyname)
+    queue_name: str = "tensorflow_cpu"
+
+    with app.test_client() as client:
+        response: Dict[str, Any] = client.get(
+            f"/api/{QUEUE_BASE_ROUTE}/name/{queue_name}"
+        )
+
+        assert response._status_code == 404
+        pytest.raises(QueueDoesNotExistError)
 
 
 def test_queue_name_resource_put(app: Flask, monkeypatch: MonkeyPatch) -> None:
@@ -320,6 +433,25 @@ def test_queue_name_resource_put(app: Flask, monkeypatch: MonkeyPatch) -> None:
         assert response == expected
 
 
+def test_queue_name_resource_put_non_existing_error(app: Flask, monkeypatch: MonkeyPatch) -> None:
+    def mockgetbyname(self, queue_name: str, *args, **kwargs) -> Queue:
+        LOGGER.info("Mocking QueueService.get_by_name()")
+        return None
+
+    monkeypatch.setattr(QueueService, "get_by_name", mockgetbyname)
+    queue_name: str = "tensorflow_cpu"
+    payload: Dict[str, Any] = {"name": "tf_cpu"}
+
+    with app.test_client() as client:
+        response: Dict[str, Any] = client.put(
+            f"/api/{QUEUE_BASE_ROUTE}/name/{queue_name}",
+            json=payload,
+        )
+
+        assert response._status_code == 404
+        pytest.raises(QueueDoesNotExistError)
+
+
 def test_queue_name_resource_delete(app: Flask, monkeypatch: MonkeyPatch) -> None:
     def mockgetbyname(self, queue_name: str, *args, **kwargs) -> Queue:
         LOGGER.info("Mocking QueueService.get_by_name()")
@@ -346,6 +478,27 @@ def test_queue_name_resource_delete(app: Flask, monkeypatch: MonkeyPatch) -> Non
         expected: Dict[str, Any] = {
             "status": "Success",
             "id": [1],
+        }
+
+        assert response == expected
+
+
+def test_queue_name_resource_delete_queue_is_none(app: Flask, monkeypatch: MonkeyPatch) -> None:
+    def mockgetbyname(self, queue_name: str, *args, **kwargs) -> Queue:
+        LOGGER.info("Mocking QueueService.get_by_name()")
+        return None
+
+    monkeypatch.setattr(QueueService, "get_by_name", mockgetbyname)
+    queue_name: str = "tensorflow_cpu"
+
+    with app.test_client() as client:
+        response: Dict[str, Any] = client.delete(
+            f"/api/{QUEUE_BASE_ROUTE}/name/{queue_name}"
+        ).get_json()
+
+        expected: Dict[str, Any] = {
+            "status": "Success",
+            "id": [],
         }
 
         assert response == expected
@@ -382,6 +535,23 @@ def test_queue_name_lock_resource_delete(app: Flask, monkeypatch: MonkeyPatch) -
         assert response == expected
 
 
+def test_queue_name_lock_resource_delete_non_existing_error(app: Flask, monkeypatch: MonkeyPatch) -> None:
+    def mockgetbyname(self, queue_name: str, *args, **kwargs) -> Queue:
+        LOGGER.info("Mocking QueueService.get_by_name()")
+        return None
+
+    monkeypatch.setattr(QueueService, "get_by_name", mockgetbyname)
+    queue_name: str = "tensorflow_cpu"
+
+    with app.test_client() as client:
+        response: Dict[str, Any] = client.delete(
+            f"/api/{QUEUE_BASE_ROUTE}/name/{queue_name}/lock"
+        )
+
+        assert response._status_code == 404
+        pytest.raises(QueueDoesNotExistError)
+
+
 def test_queue_name_lock_resource_put(app: Flask, monkeypatch: MonkeyPatch) -> None:
     def mockgetbyname(self, queue_name: str, *args, **kwargs) -> Queue:
         LOGGER.info("Mocking QueueService.get_by_name()")
@@ -411,3 +581,21 @@ def test_queue_name_lock_resource_put(app: Flask, monkeypatch: MonkeyPatch) -> N
         }
 
         assert response == expected
+
+
+def test_queue_name_lock_resource_put_non_existing_error(app: Flask, monkeypatch: MonkeyPatch) -> None:
+    def mockgetbyname(self, queue_name: str, *args, **kwargs) -> Queue:
+        LOGGER.info("Mocking QueueService.get_by_name()")
+        return None
+
+    monkeypatch.setattr(QueueService, "get_by_name", mockgetbyname)
+    queue_name: str = "tensorflow_cpu"
+
+    with app.test_client() as client:
+        response: Dict[str, Any] = client.put(
+            f"/api/{QUEUE_BASE_ROUTE}/name/{queue_name}/lock"
+        )
+
+        assert response._status_code == 404
+        pytest.raises(QueueDoesNotExistError)
+

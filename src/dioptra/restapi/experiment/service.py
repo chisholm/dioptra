@@ -113,7 +113,7 @@ class ExperimentService(object):
 
         experiment.update(changes={"is_deleted": True})
         db.session.commit()
-
+        
         return [experiment_id]
 
     def rename_experiment(

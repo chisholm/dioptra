@@ -32,7 +32,7 @@ class MLFlowTrackingService(object):
     def __init__(self, client: MlflowClient) -> None:
         self._client = client
 
-    def create_experiment(self, experiment_name: str, **kwargs) -> Optional[str]:
+    def create_experiment(self, experiment_name: str, **kwargs) :
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
         try:

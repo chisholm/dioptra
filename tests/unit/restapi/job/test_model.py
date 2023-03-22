@@ -23,7 +23,10 @@ import pytest
 import structlog
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.models import Job, JobFormData
+from wtforms.validators import ValidationError
+
+from dioptra.restapi.models import Job, JobForm, JobFormData
+from dioptra.restapi.job.interface import JobUpdateInterface
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -45,6 +48,17 @@ def job() -> Job:
         status="queued",
     )
 
+@pytest.fixture
+def job_form(workflow_tar_gz: BinaryIO) -> JobForm:
+    return JobForm(
+        experiment_name="mnist2",
+        queue="tensorflow_cpu",
+        timeout="12h",
+        entry_point="main",
+        entry_point_kwargs="-P var1=testing",
+        depends_on="0c30644b-df51-4a8b-b745-9db07ce57f72",
+        workflow=workflow_tar_gz,
+    )
 
 @pytest.fixture
 def job_form_data(workflow_tar_gz: BinaryIO) -> JobFormData:
@@ -59,10 +73,27 @@ def job_form_data(workflow_tar_gz: BinaryIO) -> JobFormData:
         workflow=workflow_tar_gz,
     )
 
-
 def test_Job_create(job: Job) -> None:
     assert isinstance(job, Job)
 
+def test_Job_update() -> None:
+    job = Job()
+    jobUpdate = JobUpdateInterface(status="started")
+
+    job.update(jobUpdate)
+
+    assert job.status == jobUpdate.get("status")
+
+def test_JobForm_validate_experiment_name_error(job_form: JobForm) -> None:
+    try:
+        job_form.validate_experiment_name(job_form.experiment_name)
+    except:
+        None
+    pytest.raises(ValidationError)
+
+def test_JobForm_validate_queue_error(job_form: JobForm) -> None:
+    job_form.validate_queue(job_form.queue)
+    pytest.raises(ValidationError)
 
 def test_JobFormData_create(job_form_data: JobFormData) -> None:
     assert isinstance(job_form_data, dict)

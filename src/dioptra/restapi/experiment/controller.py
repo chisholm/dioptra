@@ -138,6 +138,7 @@ class ExperimentIdResource(Resource):
 
         return jsonify(dict(status="Success", id=id))  # type: ignore
 
+
     @accepts(schema=ExperimentUpdateSchema, api=api)
     @responds(schema=ExperimentSchema, api=api)
     def put(self, experimentId: int) -> Experiment:

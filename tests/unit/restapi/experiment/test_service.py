@@ -20,6 +20,7 @@ import datetime
 from typing import List
 
 import pytest
+from _pytest.monkeypatch import MonkeyPatch
 import structlog
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
@@ -33,6 +34,8 @@ from dioptra.restapi.models import (
     ExperimentRegistrationForm,
     ExperimentRegistrationFormData,
 )
+from dioptra.restapi.shared.mlflow_tracking.service import MLFlowTrackingService
+import dioptra.restapi.experiment.schema
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -55,12 +58,17 @@ def experiment_service(dependency_injector) -> ExperimentService:
     return dependency_injector.get(ExperimentService)
 
 
+@pytest.fixture
+def mlflow_tracking_service(dependency_injector) -> MLFlowTrackingService:
+    return dependency_injector.get(MLFlowTrackingService)
+
+
 @freeze_time("2020-08-17T18:46:28.717559")
 def test_create(
     db: SQLAlchemy,
     experiment_service: ExperimentService,
     experiment_registration_form_data: ExperimentRegistrationFormData,
-    monkeypatch,
+    monkeypatch
 ):
     def mockcreatemlflowexperiment(self, experiment_name: str, *args, **kwargs) -> int:
         LOGGER.info(
@@ -89,6 +97,79 @@ def test_create(
         experiment_service.create(
             experiment_registration_form_data=experiment_registration_form_data
         )
+
+
+def test_create_mlflow_experiment(
+    experiment_service: ExperimentService,
+    mlflow_tracking_service: MLFlowTrackingService
+):
+    name="mnist"
+    
+    experiment_id: int = experiment_service.create_mlflow_experiment(name)
+
+    experiment: Experiment = mlflow_tracking_service._client.get_experiment_by_name(name)
+    
+    assert experiment_id == int(experiment.experiment_id)
+    
+    mlflow_tracking_service._client.delete_experiment(str(experiment_id))
+
+
+@freeze_time("2020-08-17T18:46:28.717559")
+def test_rename_experiment(
+    db: SQLAlchemy, 
+    experiment_service: ExperimentService,
+    monkeypatch: MonkeyPatch
+):
+    def mockrenameexperiment(self, experiment_id: int, new_name: str, *args, **kwargs) -> Experiment:
+        LOGGER.info("Mocking MlflowTrackingService.rename_experiment()")
+        return True
+
+    monkeypatch.setattr(MLFlowTrackingService, "rename_experiment", mockrenameexperiment)
+
+    name="mnist"
+    timestamp: datetime.datetime = datetime.datetime.now()
+    new_experiment: Experiment = Experiment(
+        name=name, created_on=timestamp, last_modified=timestamp
+    )
+    db.session.add(new_experiment)
+    db.session.commit()
+
+
+    new_name="mnist_changed"
+    response: Experiment = experiment_service.rename_experiment(
+        experiment=new_experiment,
+        new_name=new_name
+    )
+
+    assert response.name == new_name
+
+
+@freeze_time("2020-08-17T18:46:28.717559")
+def test_delete_experiment(
+    db: SQLAlchemy, 
+    experiment_service: ExperimentService,
+    monkeypatch: MonkeyPatch
+):
+    def mockdeleteexperiment(self, experiment_id: int, *args, **kwargs) -> Experiment:
+        LOGGER.info("Mocking MlflowTrackingService.delete_experiment()")
+        return True
+
+    monkeypatch.setattr(MLFlowTrackingService, "delete_experiment", mockdeleteexperiment)
+
+    name="mnist"
+    timestamp: datetime.datetime = datetime.datetime.now()
+
+    new_experiment: Experiment = Experiment(
+        name=name, created_on=timestamp, last_modified=timestamp
+    )
+    db.session.add(new_experiment)
+    db.session.commit()
+
+    response: List = experiment_service.delete_experiment(
+        experiment_id=new_experiment.experiment_id
+    )
+
+    assert response == [new_experiment.experiment_id]
 
 
 @freeze_time("2020-08-17T18:46:28.717559")

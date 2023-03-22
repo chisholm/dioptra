@@ -21,8 +21,11 @@ import datetime
 import pytest
 import structlog
 from structlog.stdlib import BoundLogger
+from wtforms.validators import ValidationError
+from wtforms.fields import StringField
 
-from dioptra.restapi.models import Experiment, ExperimentRegistrationFormData
+from dioptra.restapi.models import Experiment, ExperimentRegistrationForm, ExperimentRegistrationFormData
+from dioptra.restapi.experiment.interface import ExperimentUpdateInterface
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -36,14 +39,30 @@ def experiment() -> Experiment:
         name="mnist",
     )
 
+@pytest.fixture
+def experiment_registration_form() -> ExperimentRegistrationForm:
+    return ExperimentRegistrationForm(name="mnist")
 
 @pytest.fixture
 def experiment_registration_form_data() -> ExperimentRegistrationFormData:
     return ExperimentRegistrationFormData(name="mnist")
 
-
 def test_Experiment_create(experiment: Experiment) -> None:
     assert isinstance(experiment, Experiment)
+
+def test_Expirement_update(experiment: Experiment) -> None:
+    experimentUpdate = ExperimentUpdateInterface(name="mnist_changed", is_deleted=False)
+
+    experiment.update(changes=experimentUpdate)
+
+    assert experiment.name == experimentUpdate.get("name")
+
+def test_ExperimentRegistrationForm_validate_name_error(
+    experiment: Experiment,
+    experiment_registration_form: ExperimentRegistrationForm,
+) -> None:
+    experiment_registration_form.validate_name(experiment_registration_form.name)
+    pytest.raises(ValidationError)
 
 
 def test_ExperimentRegistrationFormData_create(

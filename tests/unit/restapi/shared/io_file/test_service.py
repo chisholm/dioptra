@@ -18,6 +18,8 @@ from pathlib import Path
 from typing import BinaryIO, List
 
 import pytest
+import os
+from tarfile import TarFile
 import structlog
 from structlog.stdlib import BoundLogger
 
@@ -65,3 +67,15 @@ def test_sanitize_file_path(io_file_service: IOFileService) -> None:
     assert clean_file_path1 == Path("/tmp") / "testfile.txt"
     assert clean_file_path2 == Path.cwd() / "testfile.txt"
     assert clean_file_path3 == Path("/tmp") / "testfile.txt"
+
+
+def test__tarfile_open(io_file_service: IOFileService) -> None:
+    file_path = "test.tar"
+    test = TarFile.open(file_path, "w")
+    test.close()
+
+    tarfile = io_file_service._tarfile_open(file_path=file_path, fileobj=None)
+
+    assert isinstance(tarfile, TarFile)
+    
+    os.remove("test.tar")

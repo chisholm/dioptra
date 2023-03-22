@@ -31,6 +31,7 @@ from werkzeug.datastructures import FileStorage
 
 from dioptra.restapi.job.service import JobService
 from dioptra.restapi.models import Job, JobFormData
+from dioptra.restapi.job.errors import JobWorkflowUploadError
 from dioptra.restapi.shared.rq.service import RQService
 from dioptra.restapi.shared.s3.service import S3Service
 
@@ -131,6 +132,30 @@ def test_get_all(db: SQLAlchemy, job_service: JobService):
     assert len(results) == 2
     assert new_job1 in results and new_job2 in results
 
+@freeze_time("2020-08-17T18:46:28.717559")
+def test_get_by_id(db: SQLAlchemy, job_service: JobService):
+    timestamp: datetime.datetime = datetime.datetime.now()
+
+    new_job1 = Job(
+        job_id="4520511d-678b-4966-953e-af2d0edcea32",
+        mlflow_run_id=None,
+        experiment_id=1,
+        queue_id=1,
+        created_on=timestamp,
+        last_modified=timestamp,
+        timeout="2d",
+        workflow_uri="s3://workflow/workflows.tar.gz",
+        entry_point="main",
+        entry_point_kwargs="-P var1=testing",
+        depends_on=None,
+    )
+
+    db.session.add(new_job1)
+    db.session.commit()
+
+    result: Job = job_service.get_by_id(new_job1.job_id)
+
+    assert new_job1 == result
 
 @freeze_time("2020-08-17T18:46:28.717559")
 def test_submit(
@@ -178,3 +203,25 @@ def test_submit(
     assert results[0].entry_point_kwargs == "-P var1=testing"
     assert results[0].depends_on is None
     assert results[0].status == "queued"
+
+
+@freeze_time("2020-08-17T18:46:28.717559")
+def test_submit(
+    db: SQLAlchemy,
+    job_service: JobService,
+    job_form_data: JobFormData,
+    monkeypatch: MonkeyPatch,
+) -> None:
+    def mockuploadworkflow(
+        self, job_form_data: JobFormData,  *args, **kwargs
+    ) -> Optional[str]:
+        LOGGER.info("Mocking JobService._upload_workflow() function")
+        return None
+
+    monkeypatch.setattr(JobService, "_upload_workflow", mockuploadworkflow)
+
+    try:
+        job_service.submit(job_form_data=job_form_data)
+    except:
+        None
+    pytest.raises(JobWorkflowUploadError)

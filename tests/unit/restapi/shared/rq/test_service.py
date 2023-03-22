@@ -123,6 +123,29 @@ def rq_service(dependency_injector, monkeypatch: MonkeyPatch) -> RQService:
 
 
 @freeze_time("2020-08-17T18:46:28.717559")
+def test_get_job_status(rq_service: RQService):
+    timestamp: datetime.datetime = datetime.datetime.now()
+
+    job: Job = Job(
+        job_id="4520511d-678b-4966-953e-af2d0edcea32",
+        experiment_id=1,
+        queue_id=1,
+        created_on=timestamp,
+        last_modified=timestamp,
+        timeout="12h",
+        workflow_uri="s3://workflow/workflows.tar.gz",
+        entry_point="main",
+        entry_point_kwargs="-P var1=testing",
+        depends_on=None,
+        status="started",
+    )
+
+    status = rq_service.get_job_status(job=job)
+
+    assert status == "started"
+
+
+@freeze_time("2020-08-17T18:46:28.717559")
 def test_get_rq_job(rq_service: RQService):
     timestamp: datetime.datetime = datetime.datetime.now()
 

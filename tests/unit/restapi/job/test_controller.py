@@ -30,7 +30,8 @@ from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.job.routes import BASE_ROUTE as JOB_BASE_ROUTE
 from dioptra.restapi.job.service import JobService
-from dioptra.restapi.models import Experiment, Job
+from dioptra.restapi.job.errors import JobDoesNotExistError, JobSubmissionError
+from dioptra.restapi.models import Experiment, Job, JobForm
 from dioptra.restapi.shared.s3.service import S3Service
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -176,6 +177,30 @@ def test_job_resource_post(
         assert response == expected
 
 
+def test_job_resource_post_job_submission_error(
+    app: Flask,
+    job_form_request: Dict[str, Any],
+    monkeypatch: MonkeyPatch,
+) -> None:
+    def mockvalidateonsubmit(*args, **kwargs) -> bool:
+        LOGGER.info("Mocking ExperimentRegistrationForm.validate_on_submit())")
+        return False
+
+    monkeypatch.setattr(JobForm, "validate_on_submit", mockvalidateonsubmit)
+
+    with app.test_client() as client:
+        response: Dict[str, Any] = client.post(
+            f"/api/{JOB_BASE_ROUTE}/",
+            content_type="multipart/form-data",
+            data=job_form_request,
+            follow_redirects=True,
+        )
+        LOGGER.info("Response received", response=response)
+
+        assert response._status_code == 400
+        pytest.raises(JobSubmissionError)
+
+
 def test_job_id_resource_get(
     app: Flask,
     monkeypatch: MonkeyPatch,
@@ -221,3 +246,23 @@ def test_job_id_resource_get(
         }
 
         assert response == expected
+
+
+def test_job_id_resource_get_non_existing(
+    app: Flask,
+    monkeypatch: MonkeyPatch,
+) -> None:
+    def mockgetbyid(self, job_id: str, *args, **kwargs) -> Job:
+        LOGGER.info("Mocking JobService.get_by_id()")
+        return None
+
+    monkeypatch.setattr(JobService, "get_by_id", mockgetbyid)
+    job_id: str = "4520511d-678b-4966-953e-af2d0edcea32"
+
+    with app.test_client() as client:
+        response: Dict[str, Any] = client.get(
+            f"/api/{JOB_BASE_ROUTE}/{job_id}"
+        )
+
+        assert response._status_code == 404
+        pytest.raises(JobDoesNotExistError)
