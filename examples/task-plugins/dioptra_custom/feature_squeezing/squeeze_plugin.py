@@ -38,10 +38,8 @@ from pathlib import Path
 from dioptra import pyplugs
 from prefect import task
 from typing import Callable, Dict, List, Optional, Tuple, Union
-from data import create_image_dataset, download_image_archive
-from log import configure_stdlib_logger, configure_structlog_logger
-from models import load_model_in_registry
 from tensorflow.keras.preprocessing.image import save_img
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from dioptra.sdk.utilities.decorators import require_package
 from dioptra.sdk.exceptions import (
     ARTDependencyError,
@@ -108,31 +106,9 @@ def feature_squeeze(
     LOGGER.info("adv_data_dir: ", path=adv_data_dir)
     LOGGER.info("adv_tar_name: ", path=adv_tar_name)
     if model_architecture == "alex_net" or model_architecture == "mobilenet":
-        #            image_size = (224, 224)
+        image_size = (224, 224)
         color_mode = "rgb"
     LOGGER.info("Downloading image archive at ", path=adv_testing_tar_name)
-    """   
-    adv_testing_tar_path = download_image_archive(
-        run_id=run_id, archive_path=adv_testing_tar_name
-    )
-    
-       adv_perturbation_tar_path = download_image_archive(
-            run_id=run_id, archive_path=adv_data_dir  #adv_perturbation_tar_name
-        )
-   
-    with tarfile.open(adv_testing_tar_path, "r:gz") as f:
-        f.extractall(path=Path.cwd())
-
-    adv_ds = create_image_dataset(
-        data_dir=str(adv_testing_data_dir.resolve()),
-        subset=None,
-        validation_split=None,
-        image_size=image_size,
-        color_mode=color_mode,
-        seed=dataset_seed,
-        batch_size=batch_size,
-    )
-    """
     data_flow = data_flow  # dv_data_dir
     #    data_flow = adv_ds
     num_images = data_flow.n
@@ -245,8 +221,28 @@ def _log_distance_metrics(distance_metrics_: Dict[str, List[List[float]]]) -> No
         mlflow.log_metric(key=f"{metric_name}_max", value=metric_values.max())
         LOGGER.info("logged distance-based metric", metric_name=metric_name)
 
+        
+def create_image_dataset(
+    data_dir: str,
+    subset: str,
+    rescale: float = 1.0 / 255,
+    validation_split: float = 0.2,
+    batch_size: int = 32,
+    seed: int = 8237131,
+    label_mode: str = "categorical",
+    color_mode: str = "grayscale",
+    image_size: Tuple[int, int] = (28, 28),
+):
+    data_generator: ImageDataGenerator = ImageDataGenerator(
+        rescale=rescale, validation_split=validation_split,
+    )
 
-"""
-        classifier = load_model_in_registry(model=model)
-        evaluate_classification_metrics(classifier=classifier, adv_ds=adv_ds_defend)
-"""
+    return data_generator.flow_from_directory(
+        directory=data_dir,
+        target_size=image_size,
+        color_mode=color_mode,
+        class_mode=label_mode,
+        batch_size=batch_size,
+        seed=seed,
+        subset=subset,
+    )

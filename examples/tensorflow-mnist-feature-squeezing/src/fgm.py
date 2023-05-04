@@ -39,6 +39,7 @@ from dioptra.sdk.utilities.logging import (
     set_logging_level,
 )
 
+_CUSTOM_PLUGINS_IMPORT_PATH: str = "dioptra_custom"
 _PLUGINS_IMPORT_PATH: str = "dioptra_builtins"
 DISTANCE_METRICS: List[Dict[str, str]] = [
     {"name": "l_infinity_norm", "func": "l_inf_norm"},
@@ -276,8 +277,8 @@ def init_fgm_flow() -> Flow:
             request=DISTANCE_METRICS,
         )
         distance_metrics = pyplugs.call_task(
-            "src",
-            "fgm_plugin",
+            f"{_PLUGINS_IMPORT_PATH}.attacks",
+            "fgm",
             "create_adversarial_fgm_dataset",
             data_dir=testing_dir,
             keras_classifier=keras_classifier,
@@ -313,8 +314,8 @@ def init_fgm_flow() -> Flow:
 
 
 if __name__ == "__main__":
-    log_level: str = os.getenv("DIOPTRA_JOB_LOG_LEVEL", default="INFO")
-    as_json: bool = True if os.getenv("DIOPTRA_JOB_LOG_AS_JSON") else False
+    log_level: str = os.getenv("AI_JOB_LOG_LEVEL", default="INFO")
+    as_json: bool = True if os.getenv("AI_JOB_LOG_AS_JSON") else False
 
     clear_logger_handlers(get_prefect_logger())
     attach_stdout_stream_handler(as_json)

@@ -27,16 +27,11 @@ tf.compat.v1.disable_eager_execution()
 
 import click
 import mlflow
-import mlflow.tensorflow
 import numpy as np
 import structlog
-import pandas as pd
 import os
 from pathlib import Path
 
-from data import create_image_dataset, download_image_archive
-from log import configure_stdlib_logger, configure_structlog_logger
-from models import load_model_in_registry
 from tensorflow.keras.preprocessing.image import save_img
 from art.defences.preprocessor import FeatureSqueezing
 from typing import Dict, List
@@ -53,6 +48,7 @@ from dioptra.sdk.utilities.logging import (
     set_logging_level,
 )
 
+_CUSTOM_PLUGINS_IMPORT_PATH: str = "dioptra_custom"
 _PLUGINS_IMPORT_PATH: str = "dioptra_builtins"
 DISTANCE_METRICS: List[Dict[str, str]] = [
     {"name": "l_infinity_norm", "func": "l_inf_norm"},
@@ -71,45 +67,12 @@ def _coerce_comma_separated_ints(ctx, param, value):
 
 LOGGER = structlog.get_logger()
 
-"""
-def save_adv_batch(adv_batch, adv_data_dir, y, clean_filenames, class_names_list):
-    for batch_image_num, adv_image in enumerate(adv_batch):
-        out_label = class_names_list[y[batch_image_num]]
-        adv_image_path = (
-            adv_data_dir
-            / f"{out_label}"
-            / f"adv_{clean_filenames[batch_image_num].name}"
-        )
-
-        if not adv_image_path.parent.exists():
-            adv_image_path.parent.mkdir(parents=True)
-
-        save_img(path=str(adv_image_path), x=adv_image)
-
-
-def evaluate_classification_metrics(classifier, adv_ds):
-    LOGGER.info("evaluating classification metrics using adversarial images")
-    result = classifier.evaluate(adv_ds, verbose=0)
-    adv_metrics = dict(zip(classifier.metrics_names, result))
-    LOGGER.info(
-        "computation of classification metrics for adversarial images complete",
-        **adv_metrics,
-    )
-    for metric_name, metric_value in adv_metrics.items():
-        mlflow.log_metric(key=metric_name, value=metric_value)
-"""
-
-
 @click.command()
 @click.option(
-    "--run-id",
-    type=click.STRING,
-    help="MLFlow Run ID of a successful fgm attack",
+    "--run-id", type=click.STRING, help="MLFlow Run ID of a successful fgm attack",
 )
 @click.option(
-    "--model",
-    type=click.STRING,
-    help="Name of model to load from registry",
+    "--model", type=click.STRING, help="Name of model to load from registry",
 )
 @click.option(
     "--model-architecture",
@@ -126,10 +89,7 @@ def evaluate_classification_metrics(classifier, adv_ds):
     default=32,
 )
 @click.option(
-    "--seed",
-    type=click.INT,
-    help="Set the entry point rng seed",
-    default=-1,
+    "--seed", type=click.INT, help="Set the entry point rng seed", default=-1,
 )
 @click.option(
     "--bit-depth",
@@ -157,9 +117,7 @@ def evaluate_classification_metrics(classifier, adv_ds):
     help="Directory for saving fgm images",
 )
 @click.option(
-    "--model-version",
-    type=click.STRING,
-    default="1",
+    "--model-version", type=click.STRING, default="1",
 )
 @click.option(
     "--image-size",
@@ -282,16 +240,6 @@ def init_squeeze_flow() -> Flow:
                 dataset_seed=dataset_seed,
             ),
         )
-        """
-        keras_classifier = pyplugs.call_task(
-            f"{_PLUGINS_IMPORT_PATH}.registry",
-            "art",
-            "load_wrapped_tensorflow_keras_classifier",
-            name=model,
-            version=model_version,
-            upstream_tasks=[init_tensorflow_results],
-        )
-        """
         distance_metrics_list = pyplugs.call_task(
             f"{_PLUGINS_IMPORT_PATH}.metrics",
             "distance",
@@ -324,7 +272,7 @@ def init_squeeze_flow() -> Flow:
         )
 
         feature_squeeze = pyplugs.call_task(
-            "src",
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.feature_squeezing",
             "squeeze_plugin",
             "feature_squeeze",
             data_dir=data_dir,
@@ -365,8 +313,8 @@ def init_squeeze_flow() -> Flow:
 
 
 if __name__ == "__main__":
-    log_level: str = os.getenv("DIOPTRA_JOB_LOG_LEVEL", default="INFO")
-    as_json: bool = True if os.getenv("DIOPTRA_JOB_LOG_AS_JSON") else False
+    log_level: str = os.getenv("AI_JOB_LOG_LEVEL", default="INFO")
+    as_json: bool = True if os.getenv("AI_JOB_LOG_AS_JSON") else False
 
     #   clear_logger_handlers(get_prefect_logger())
     attach_stdout_stream_handler(as_json)

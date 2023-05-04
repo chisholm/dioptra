@@ -39,6 +39,7 @@ from dioptra.sdk.utilities.logging import (
     set_logging_level,
 )
 
+_CUSTOM_PLUGINS_IMPORT_PATH: str = "dioptra_custom"
 _PLUGINS_IMPORT_PATH: str = "dioptra_builtins"
 DISTANCE_METRICS: List[Dict[str, str]] = [
     {"name": "l_infinity_norm", "func": "l_inf_norm"},
@@ -98,11 +99,11 @@ def _coerce_int_to_bool(ctx, param, value):
 @click.option(
     "--model-name",
     type=click.STRING,
+    default="plugin_feature_squeeze_le_net",
     help="Name of model to load from registry",
 )
 @click.option(
-    "--model-version",
-    type=click.STRING,
+    "--model-version", type=click.STRING,
 )
 @click.option(
     "--model-architecture",
@@ -117,9 +118,7 @@ def _coerce_int_to_bool(ctx, param, value):
     default=32,
 )
 @click.option(
-    "--theta",
-    type=click.FLOAT,
-    default="0.01",
+    "--theta", type=click.FLOAT, default="0.01",
 )
 @click.option(
     "--gamma",
@@ -128,16 +127,10 @@ def _coerce_int_to_bool(ctx, param, value):
     help=" Confidence of adversarial examples",
 )
 @click.option(
-    "--seed",
-    type=click.INT,
-    help="Set the entry point rng seed",
-    default=-1,
+    "--seed", type=click.INT, help="Set the entry point rng seed", default=-1,
 )
 @click.option(
-    "--verbose",
-    type=click.BOOL,
-    help="Show progress bars",
-    default=True,
+    "--verbose", type=click.BOOL, help="Show progress bars", default=True,
 )
 def jsma_attack(
     data_dir,
@@ -179,12 +172,12 @@ def jsma_attack(
                 adv_tar_name=adv_tar_name,
                 adv_data_dir=(Path.cwd() / adv_data_dir).resolve(),
                 distance_metrics_filename="distance_metrics.csv",
-                #               model_name=model_name,
+                model_name=model_name,
                 model_version=model_version,
                 batch_size=batch_size,
                 seed=seed,
                 #               model_architecture=model_architecture,
-                #               verbose=verbose,
+                #                verbose=verbose,
                 theta=theta,
                 gamma=gamma,
             )
@@ -271,10 +264,10 @@ def init_jsma_flow() -> Flow:
             request=DISTANCE_METRICS,
         )
         distance_metrics = pyplugs.call_task(
-            "src",
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.feature_squeezing",
             "jsma_plugin",
             "create_adversarial_jsma_dataset",
-            model_name="plugin_feature_squeeze_le_net",  # model_name,
+            model_name=model_name,
             model_version=model_version,
             data_dir=testing_dir,
             keras_classifier=keras_classifier,
@@ -308,8 +301,8 @@ def init_jsma_flow() -> Flow:
 
 
 if __name__ == "__main__":
-    log_level: str = os.getenv("DIOPTRA_JOB_LOG_LEVEL", default="INFO")
-    as_json: bool = True if os.getenv("DIOPTRA_JOB_LOG_AS_JSON") else False
+    log_level: str = os.getenv("AI_JOB_LOG_LEVEL", default="INFO")
+    as_json: bool = True if os.getenv("AI_JOB_LOG_AS_JSON") else False
 
     clear_logger_handlers(get_prefect_logger())
     attach_stdout_stream_handler(as_json)

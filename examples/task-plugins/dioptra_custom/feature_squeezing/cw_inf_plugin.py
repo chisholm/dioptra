@@ -25,8 +25,8 @@ import pandas as pd
 import scipy.stats
 import structlog
 import random
+import tensorflow as tf
 from structlog.stdlib import BoundLogger
-
 from dioptra import pyplugs
 from dioptra.sdk.exceptions import (
     ARTDependencyError,
@@ -37,7 +37,8 @@ from dioptra.sdk.utilities.decorators import require_package
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 try:
-    from art.attacks.evasion import SaliencyMapMethod
+    from art.attacks.evasion import CarliniLInfMethod
+    from art.attacks.evasion import CarliniL2Method
     from art.estimators.classification import KerasClassifier
 
 except ImportError:  # pragma: nocover
@@ -60,12 +61,14 @@ except ImportError:  # pragma: nocover
 @pyplugs.register
 @require_package("art", exc_type=ARTDependencyError)
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
-def create_adversarial_jsma_dataset(
+def create_adversarial_cw_inf_dataset(
     data_dir: str,
     model_name: str,
     model_version: str,
-    theta: float,
-    gamma: float,
+    learning_rate: float,
+    max_iter: int,
+    verbose: str,
+    # eps: float,
     keras_classifier: KerasClassifier,
     adv_data_dir: Path = None,
     rescale: float = 1.0 / 255,
@@ -73,30 +76,24 @@ def create_adversarial_jsma_dataset(
     label_mode: str = "categorical",
     color_mode: str = "grayscale",
     image_size: Tuple[int, int] = (28, 28),
-    verbose: bool = True,
+    confidence: float = 0.0,
     **kwargs,
 ):
-    model_name = model_name + "/" + model_version
+    model_name = model_name
     LOGGER.info("Model Selected: ", model_name=model_name)
     color_mode: str = "color" if image_size[2] == 3 else "grayscale"
     target_size: Tuple[int, int] = image_size[:2]
     adv_data_dir = Path(adv_data_dir)
-    """
-    attack = _init_jsma(
+    LOGGER.info("initiating classifier: ", keras_classifier=keras_classifier)
+    attack = _init_cw_inf(
         keras_classifier=keras_classifier,
         batch_size=batch_size,
-        verbose = True,
-        theta = theta,
-        gamma = gamma
+        confidence=confidence,
+        learning_rate=learning_rate,  # placeholder
+        max_iter=max_iter,
+        verbose=verbose,
     )
-    """
-    attack = SaliencyMapMethod(
-        classifier=keras_classifier,
-        batch_size=batch_size,
-        gamma=gamma,
-        theta=theta,
-        verbose=True,
-    )
+
     data_generator: ImageDataGenerator = ImageDataGenerator(rescale=rescale)
 
     data_flow = data_generator.flow_from_directory(
@@ -116,8 +113,12 @@ def create_adversarial_jsma_dataset(
         distance_metrics_[metric_name] = []
     LOGGER.info(
         "Generate adversarial images",
-        attack="jsma",
+        attack="cw_inf",
+        model_version=model_version,
         num_batches=num_images // batch_size,
+        confidence=confidence,
+        learning_rate=learning_rate,
+        max_iter=max_iter,
     )
     # Here
     n_classes = len(class_names_list)
@@ -131,14 +132,18 @@ def create_adversarial_jsma_dataset(
 
         LOGGER.info(
             "Generate adversarial image batch",
-            attack="jsma",
+            attack="cw_inf",
             batch_num=batch_num,
+            attack_object=attack,
         )
 
         y_int = np.argmax(y, axis=1)
-        adv_batch = attack.generate(x=x)
+
+        target_index = random.randint(0, n_classes - 1)
+
+        adv_batch = attack.generate(x=x, y=y)
         LOGGER.info(
-            "Saving adversarial image batch", attack="jsma", batch_num=batch_num
+            "Saving adversarial image batch", attack="cw_inf", batch_num=batch_num,
         )
         _save_adv_batch(
             adv_batch, adv_data_dir, y_int, clean_filenames  # ,class_names_list
@@ -152,15 +157,15 @@ def create_adversarial_jsma_dataset(
             distance_metrics_list=distance_metrics_list,
         )
 
-    LOGGER.info("Adversarial Carlini-Wagner image generation complete", attack="jsma")
+    LOGGER.info("Adversarial Carlini-Wagner image generation complete", attack="cw_inf")
     _log_distance_metrics(distance_metrics_)
 
     return pd.DataFrame(distance_metrics_)
 
 
-def _init_jsma(
+def _init_cw_inf(
     keras_classifier: KerasClassifier, batch_size: int, **kwargs
-) -> JSMAMethod:
+) -> CarliniLInfMethod:
     """Initializes :py:class:`~art.attacks.evasionCarliniLInfMethod`.
 
     Args:
@@ -171,7 +176,7 @@ def _init_jsma(
     Returns:
         A :py:class:`~art.attacks.evasion.CarliniLInfMethod` object.
     """
-    attack: SaliencyMapMethod = SaliencyMapMethod(
+    attack: CarliniLInfMethod = CarliniLInfMethod(
         classifier=keras_classifier, batch_size=batch_size, **kwargs
     )
     return attack

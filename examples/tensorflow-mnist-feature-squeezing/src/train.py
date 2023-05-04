@@ -45,6 +45,7 @@ from dioptra.sdk.utilities.logging import (
 )
 
 _PLUGINS_IMPORT_PATH: str = "dioptra_builtins"
+_CUSTOM_PLUGINS_IMPORT_PATH: str = "dioptra_custom"
 CALLBACKS: List[Dict[str, Any]] = [
     {
         "name": "EarlyStopping",
@@ -92,10 +93,7 @@ def _coerce_comma_separated_ints(ctx, param, value):
     help="Model architecture",
 )
 @click.option(
-    "--epochs",
-    type=click.INT,
-    help="Number of epochs to train model",
-    default=30,
+    "--epochs", type=click.INT, help="Number of epochs to train model", default=30,
 )
 @click.option(
     "--batch-size",
@@ -128,10 +126,7 @@ def _coerce_comma_separated_ints(ctx, param, value):
     default=0.2,
 )
 @click.option(
-    "--seed",
-    type=click.INT,
-    help="Set the entry point rng seed",
-    default=-1,
+    "--seed", type=click.INT, help="Set the entry point rng seed", default=-1,
 )
 def train(
     data_dir,
@@ -293,7 +288,7 @@ def init_train_flow() -> Flow:
             ds=training_ds,
         )
         classifier = pyplugs.call_task(
-            "src",  # for plugin dev
+            f"{_PLUGINS_IMPORT_PATH}.estimators",  # for plugin dev
             "keras_classifiers",
             "init_classifier",
             model_architecture=model_architecture,
@@ -316,15 +311,32 @@ def init_train_flow() -> Flow:
                 verbose=2,
             ),
         )
-        classifier_performance_metrics = evaluate_metrics_tensorflow(
-            classifier=classifier, dataset=testing_ds, upstream_tasks=[history]
+        classifier_performance_metrics = pyplugs.call_task(
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.evaluation",
+            "tensorflow",
+            "evaluate_metrics_tensorflow",
+            classifier=classifier,
+            dataset=testing_ds,
+            upstream_tasks=[history]
         )
+        
         log_classifier_performance_metrics_result = pyplugs.call_task(  # noqa: F841
             f"{_PLUGINS_IMPORT_PATH}.tracking",
             "mlflow",
             "log_metrics",
             metrics=classifier_performance_metrics,
         )
+        
+        logged_tensorflow_keras_estimator = pyplugs.call_task(
+            f"{_PLUGINS_IMPORT_PATH}.tracking",
+            "mlflow",
+            "log_tensorflow_keras_estimator",
+            estimator=classifier,
+            model_dir="model",
+            upstream_tasks=[history],
+        )
+
+
         model_version = pyplugs.call_task(  # noqa: F841
             f"{_PLUGINS_IMPORT_PATH}.registry",
             "mlflow",
@@ -339,8 +351,8 @@ def init_train_flow() -> Flow:
 
 
 if __name__ == "__main__":
-    log_level: str = os.getenv("DIOPTRA_JOB_LOG_LEVEL", default="INFO")
-    as_json: bool = True if os.getenv("DIOPTRA_JOB_LOG_AS_JSON") else False
+    log_level: str = os.getenv("AI_JOB_LOG_LEVEL", default="INFO")
+    as_json: bool = True if os.getenv("AI_JOB_LOG_AS_JSON") else False
 
     clear_logger_handlers(get_prefect_logger())
     attach_stdout_stream_handler(as_json)
