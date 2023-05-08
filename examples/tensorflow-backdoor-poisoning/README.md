@@ -1,11 +1,5 @@
 # Tensorflow Backdoor Poisoning Demos
 
-> ⚠️ **IMPORTANT!**
->
-> This README is out of date and will be updated in the near future.
->
-> There is a new setup tool that all users should use to configure and run Dioptra, please see the new sections [Building the containers](https://pages.nist.gov/dioptra/getting-started/building-the-containers.html) and [Running Dioptra](https://pages.nist.gov/dioptra/getting-started/running-dioptra.html) that have been added to the documentation.
-
 This demo provides three different versions of a backdoor poisoning attack with image preprocessing defense.
 The three available ipython demos explore the following poisoning attacks:
 
@@ -23,41 +17,23 @@ Each of these attacks also explore the following preprocessing defenses from the
 -   Gaussian Augmentation: Adds gaussian noise to an image.
 -   JPEG Compression: Applies an image compression algorithm over the image.
 
-## Getting started
+## Running the example
 
-### Local run
+To prepare your environment for running this example, follow the linked instructions below:
 
-Everything you need to run the demos on your local computer is packaged into a set of Docker images that you can obtain by opening a terminal, navigating to the root directory of the repository, and running `make pull-latest`.
-Once you have downloaded the images, navigate to this example's directory using the terminal and run the demo startup sequence:
+1.  [Create and activate a Python virtual environment and install the necessary dependencies](../README.md#creating-a-virtual-environment)
+2.  [Download the MNIST dataset using the download_data.py script.](../README.md#downloading-datasets)
+3.  [Follow the links in these User Setup instructions](../../README.md#user-setup) to do the following:
+    -   Build the containers
+    -   Use the cookiecutter template to generate the scripts, configuration files, and Docker Compose files you will need to run Dioptra
+4.  [Edit the docker-compose.yml file to mount the data folder in the worker containers](../README.md#mounting-the-data-folder-in-the-worker-containers)
+5.  [Initialize and start Dioptra](https://pages.nist.gov/dioptra/getting-started/running-dioptra.html#initializing-the-deployment)
+6.  [Register the custom task plugins for Dioptra's examples and demos](../README.md#registering-custom-task-plugins)
+7.  [Register the queues for Dioptra's examples and demos](../README.md#registering-queues)
+8.  [Start JupyterLab and open `demo.ipynb`](../README.md#starting-jupyter-lab)
 
-```bash
-make demo
-```
-
-The startup sequence will take more time to finish the first time you use this demo, as you will need to download the MNIST dataset, initialize the Testbed API database, and synchronize the task plugins to the S3 storage.
-Once the startup process completes, open up your web browser and enter `<http://localhost:38888>` in the address bar to access the Jupyter Lab interface (if nothing shows up, wait 10-15 more seconds and try again).
-Double click the `work` folder, open the notebook of your choosing, and follow the provided instructions in the Jupyter notebook.
-**Don't forget to update the `DATASET_DIR` variable to be: `DATASET_DIR = "/nfs/data"`.**
-
-If you want to watch the output logs for the Tensorflow worker containers as you step through the demo, run `docker-compose logs -f tfcpu-01 tfcpu-02` in your terminal.
-
-When you are done running the demo, close the browser tab containing this Jupyter notebook and shut down the services by running `make teardown` on the command-line.
-If you were watching the output logs, you will need to press <kbd>Ctrl</kbd>-<kbd>C</kbd> to stop following the logs before you can run `make teardown`.
-
-### On-prem deployment
-
-To run any of the demo notebooks using an on-prem deployment, all you need to do is download and start the **jupyter** service defined in this example's `docker-compose.yml` file.
-Open a terminal and navigate to this example's directory and run the **jupyter** startup sequence,
-
-```bash
-make jupyter
-```
-
-Once the startup process completes, open up your web browser and enter <http://localhost:38888> in the address bar to access the Jupyter Lab interface (if nothing shows up, wait 10-15 more seconds and try again).
-Double click the `work` folder, open the notebook of your choosing, and follow the provided instructions in the Jupyter notebook.
-
-When you are done running the demo, close the browser tab containing this Jupyter notebook and shut down the services by running `make teardown` on the command-line.
-
+Steps 1–4 and 6–7 only need to be run once.
+**Returning users only need to repeat Steps 5 (if you stopped Dioptra using `docker compose down`) and 8 (if you stopped the `jupyter lab` process)**.
 ## MLflow Entrypoint Overview
 
 Here are the available MLflow entry points used by the poisoning demos and their associated parameters.

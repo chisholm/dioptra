@@ -19,7 +19,7 @@ name: imagenet-resnet50-fgm
 entry_points:
   gen_poison_data:
     parameters:
-      data_dir: {type: path, default: "/nfs/data"}
+      data_dir: {type: path, default: "/dioptra/data/Mnist"}
       image_size: {type: string, default: "28,28,1"}
       adv_tar_name: { type: string, default: "adversarial_poison.tar.gz" }
       adv_data_dir: { type: string, default: "adv_poison_data" }
@@ -29,7 +29,7 @@ entry_points:
       poison_fraction: {type: float, default: 1}
       label_type: {type: string, default: "test"}
     command: >
-      python src/gen_poison_data.py
+      python gen_poison_data.py
       --data-dir {data_dir}
       --image-size {image_size}
       --adv-tar-name {adv_tar_name}
@@ -43,7 +43,7 @@ entry_points:
   deploy_poison:
     parameters:
       run_id: {type: string}
-      data_dir: {type: path, default: "/nfs/data"}
+      data_dir: {type: path, default: "/dioptra/data/Mnist"}
       poison_deployment_method: {type: string, default: "add"}
       num_poisoned_images: {type: int, default: -1}
       adv_tar_name: { type: string, default: "adversarial_poison.tar.gz" }
@@ -52,7 +52,7 @@ entry_points:
       poison_data_dir: { type: string, default: "adv_poison_dataset" }
       seed: {type: float, default: -1}
     command: >
-      python src/deploy_poison.py
+      python deploy_poison.py
       --run-id {run_id}
       --data-dir {data_dir}
       --adv-tar-name {adv_tar_name}
@@ -65,7 +65,7 @@ entry_points:
 
   spatial_smoothing:
     parameters:
-      data_dir: { type: path, default: "/nfs/data" }
+      data_dir: { type: path, default: "/dioptra/data/Mnist" }
       image_size: { type: string, default: "28,28,1" }
       def_tar_name: { type: string, default: "spatial_smoothing_dataset.tar.gz" }
       def_data_dir: { type: string, default: "adv_testing" }
@@ -79,7 +79,7 @@ entry_points:
       dataset_name: {type: string, default: "none"}
       seed: { type: float, default: -1 }
     command: >
-      python src/spatial_smoothing.py
+      python spatial_smoothing.py
       --data-dir {data_dir}
       --image-size {image_size}
       --def-tar-name {def_tar_name}
@@ -96,7 +96,7 @@ entry_points:
 
   jpeg_compression:
     parameters:
-      data_dir: { type: path, default: "/nfs/data" }
+      data_dir: { type: path, default: "/dioptra/data/Mnist" }
       image_size: { type: string, default: "28,28,1" }
       def_tar_name: { type: string, default: "jpeg_compression_dataset.tar.gz" }
       def_data_dir: { type: string, default: "adv_testing" }
@@ -111,7 +111,7 @@ entry_points:
       dataset_name: {type: string, default: "none"}
       seed: { type: float, default: -1 }
     command: >
-      python src/jpeg_compression.py
+      python jpeg_compression.py
       --data-dir {data_dir}
       --image-size {image_size}
       --def-tar-name {def_tar_name}
@@ -129,7 +129,7 @@ entry_points:
 
   gaussian_augmentation:
     parameters:
-      data_dir: { type: path, default: "/nfs/data" }
+      data_dir: { type: path, default: "/dioptra/data/Mnist" }
       image_size: { type: string, default: "28,28,1" }
       def_tar_name: { type: string, default: "gaussian_augmentation_dataset.tar.gz" }
       def_data_dir: { type: string, default: "adv_testing" }
@@ -145,7 +145,7 @@ entry_points:
       dataset_name: {type: string, default: "none"}
       seed: { type: float, default: -1 }
     command: >
-      python src/gaussian_augmentation.py
+      python gaussian_augmentation.py
       --data-dir {data_dir}
       --image-size {image_size}
       --def-tar-name {def_tar_name}
@@ -175,7 +175,7 @@ entry_points:
       imagenet_preprocessing: { type: string, default: "false"}
       seed: { type: float, default: -1 }
     command: >
-      python src/infer.py
+      python infer.py
       --run-id {run_id}
       --image-size {image_size}
       --model-name {model_name}
@@ -188,8 +188,8 @@ entry_points:
 
   gen_poison_model:
     parameters:
-      data_dir_testing: { type: path, default: "/nfs/data" }
-      data_dir_training: { type: path, default: "/nfs/data" }
+      data_dir_testing: { type: path, default: "/dioptra/data/Mnist/testing" }
+      data_dir_training: { type: path, default: "/dioptra/data/Mnist/training" }
       image_size: { type: string, default: "28,28,1" }
       model_architecture: { type: string, default: "le_net" }
       epochs: { type: float, default: 30 }
@@ -212,7 +212,7 @@ entry_points:
       poison_fraction: {type: float, default: 0.10}
       seed: { type: float, default: -1 }
     command: >
-      python src/gen_poison_model.py
+      python gen_poison_model.py
       --data-dir-testing {data_dir_testing}
       --data-dir-training {data_dir_training}
       --image-size {image_size}
@@ -239,8 +239,8 @@ entry_points:
 
   train_madry_pgd:
     parameters:
-      data_dir_testing: { type: path, default: "/nfs/data" }
-      data_dir_training: { type: path, default: "/nfs/data" }
+      data_dir_testing: { type: path, default: "/dioptra/data/Mnist/testing" }
+      data_dir_training: { type: path, default: "/dioptra/data/Mnist/training" }
       image_size: { type: string, default: "28,28,1" }
       model_architecture: { type: string, default: "le_net" }
       epochs: { type: float, default:10 }
@@ -259,7 +259,7 @@ entry_points:
       adv_data_dir: { type: string, default: "adv_patch_dataset" }
       seed: { type: float, default: -1 }
     command: >
-      python src/train_with_madry_pgd_defense.py
+      python train_with_madry_pgd_defense.py
       --data-dir-testing {data_dir_testing}
       --data-dir-training {data_dir_training}
       --image-size {image_size}
@@ -282,8 +282,8 @@ entry_points:
 
   train:
     parameters:
-      data_dir_testing: { type: path, default: "/nfs/data" }
-      data_dir_training: { type: path, default: "/nfs/data" }
+      data_dir_testing: { type: path, default: "/dioptra/data/Mnist/testing" }
+      data_dir_training: { type: path, default: "/dioptra/data/Mnist/training" }
       image_size: { type: string, default: "28,28,1" }
       model_architecture: { type: string, default: "le_net" }
       epochs: { type: float, default:10 }
@@ -300,7 +300,7 @@ entry_points:
       adv_data_dir: { type: string, default: "adv_patch_dataset" }
       seed: { type: float, default: -1 }
     command: >
-      python src/train.py
+      python train.py
       --data-dir-testing {data_dir_testing}
       --data-dir-training {data_dir_training}
       --image-size {image_size}
@@ -321,7 +321,7 @@ entry_points:
 
   init_model:
     parameters:
-      data_dir: { type: path, default: "/nfs/data" }
+      data_dir: { type: path, default: "/dioptra/data/Mnist" }
       image_size: { type: string, default: "28,28,1" }
       model_architecture: { type: string, default: "le_net" }
       batch_size: { type: float, default: 32 }
@@ -331,7 +331,7 @@ entry_points:
       imagenet_preprocessing: { type: string, default: "false"}
       seed: { type: float, default: -1 }
     command: >
-      python src/init_model.py
+      python init_model.py
       --data-dir {data_dir}
       --image-size {image_size}
       --model-architecture {model_architecture}
@@ -344,7 +344,7 @@ entry_points:
 
   gen_poison_clean_data:
     parameters:
-      data_dir: { type: path, default: "/nfs/data" }
+      data_dir: { type: path, default: "/dioptra/data/Mnist" }
       image_size: { type: string, default: "28,28,1" }
       adv_tar_name: { type: string, default: "adversarial_poison.tar.gz" }
       adv_data_dir: { type: string, default: "adv_poison_data" }
@@ -360,7 +360,7 @@ entry_points:
       norm: { type: string, default: "2" }
       seed: { type: float, default: -1 }
     command: >
-      python src/gen_poison_clean_data.py
+      python gen_poison_clean_data.py
       --data-dir {data_dir}
       --image-size {image_size}
       --adv-tar-name {adv_tar_name}
