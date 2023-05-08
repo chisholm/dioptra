@@ -99,7 +99,7 @@ def _coerce_int_to_bool(ctx, param, value):
 @click.option(
     "--model-name",
     type=click.STRING,
-    default="plugin_feature_squeeze_le_net",
+    default="mnist_le_net",
     help="Name of model to load from registry",
 )
 @click.option(
@@ -253,7 +253,7 @@ def init_jsma_flow() -> Flow:
             f"{_PLUGINS_IMPORT_PATH}.registry",
             "art",
             "load_wrapped_tensorflow_keras_classifier",
-            name="plugin_feature_squeeze_le_net",  # model_name,
+            name=model_name,
             version=model_version,
             upstream_tasks=[init_tensorflow_results],
         )

@@ -26,12 +26,6 @@ import structlog
 from prefect import Flow, Parameter
 from prefect.utilities.logging import get_logger as get_prefect_logger
 from structlog.stdlib import BoundLogger
-from tasks import (
-    evaluate_metrics_tensorflow,
-    get_model_callbacks,
-    get_optimizer,
-    get_performance_metrics,
-)
 
 from dioptra import pyplugs
 from dioptra.sdk.utilities.contexts import plugin_dirs
@@ -234,16 +228,27 @@ def init_train_flow() -> Flow:
                 dataset_seed=dataset_seed,
             ),
         )
-        optimizer = get_optimizer(
-            optimizer_name,
+        optimizer = pyplugs.call_task(
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.evaluation",
+            "tensorflow",
+            "get_optimizer",
+            optimizer=optimizer_name,
             learning_rate=learning_rate,
             upstream_tasks=[init_tensorflow_results],
         )
-        metrics = get_performance_metrics(
-            PERFORMANCE_METRICS, upstream_tasks=[init_tensorflow_results]
+        metrics = pyplugs.call_task(
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.evaluation",
+            "tensorflow",
+            "get_performance_metrics",
+            metrics_list=PERFORMANCE_METRICS,
+            upstream_tasks=[init_tensorflow_results],
         )
-        callbacks_list = get_model_callbacks(
-            CALLBACKS, upstream_tasks=[init_tensorflow_results]
+        callbacks_list = pyplugs.call_task(
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.evaluation",
+            "tensorflow",
+            "get_model_callbacks",
+            callbacks_list=CALLBACKS,
+            upstream_tasks=[init_tensorflow_results],
         )
         training_ds = pyplugs.call_task(
             f"{_PLUGINS_IMPORT_PATH}.data",

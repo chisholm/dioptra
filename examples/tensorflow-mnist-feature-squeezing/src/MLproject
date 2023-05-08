@@ -52,7 +52,7 @@ entry_points:
       data_dir: {type: path, default: "/dioptra/data/Mnist"}
       model_name: {type: string, default: "mobilenet"}
       model_version: {type: string, default: "1"}
-      image_size: {type: string, default: "224,224"} #,3"}
+      image_size: {type: string, default: "28,28"}
       model_architecture: {type: string, default: "le_net"}
       batch_size: {type: float, default: 40}
       seed: {type: float, default: -1}
