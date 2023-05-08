@@ -17,28 +17,23 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Tuple
 
 import mlflow
 import numpy as np
 import pandas as pd
 import scipy.stats
 import structlog
-import random
-import tensorflow as tf
 from structlog.stdlib import BoundLogger
+
 from dioptra import pyplugs
-from dioptra.sdk.exceptions import (
-    ARTDependencyError,
-    TensorflowDependencyError,
-)
+from dioptra.sdk.exceptions import ARTDependencyError, TensorflowDependencyError
 from dioptra.sdk.utilities.decorators import require_package
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 try:
     from art.attacks.evasion import CarliniLInfMethod
-    from art.attacks.evasion import CarliniL2Method
     from art.estimators.classification import KerasClassifier
 
 except ImportError:  # pragma: nocover
@@ -106,7 +101,6 @@ def create_adversarial_cw_inf_dataset(
     )
     num_images = data_flow.n
     img_filenames = [Path(x) for x in data_flow.filenames]
-    class_names_list = sorted(data_flow.class_indices, key=data_flow.class_indices.get)
     distance_metrics_list = []  # distance_metrics_list or []
     distance_metrics_: Dict[str, List[List[float]]] = {"image": [], "label": []}
     for metric_name, _ in distance_metrics_list:
@@ -120,9 +114,6 @@ def create_adversarial_cw_inf_dataset(
         learning_rate=learning_rate,
         max_iter=max_iter,
     )
-    # Here
-    n_classes = len(class_names_list)
-    # End
     for batch_num, (x, y) in enumerate(data_flow):
         if batch_num >= num_images // batch_size:
             break
@@ -139,11 +130,11 @@ def create_adversarial_cw_inf_dataset(
 
         y_int = np.argmax(y, axis=1)
 
-        target_index = random.randint(0, n_classes - 1)
-
         adv_batch = attack.generate(x=x, y=y)
         LOGGER.info(
-            "Saving adversarial image batch", attack="cw_inf", batch_num=batch_num,
+            "Saving adversarial image batch",
+            attack="cw_inf",
+            batch_num=batch_num,
         )
         _save_adv_batch(
             adv_batch, adv_data_dir, y_int, clean_filenames  # ,class_names_list

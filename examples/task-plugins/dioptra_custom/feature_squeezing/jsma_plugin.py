@@ -17,21 +17,17 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Tuple
 
 import mlflow
 import numpy as np
 import pandas as pd
 import scipy.stats
 import structlog
-import random
 from structlog.stdlib import BoundLogger
 
 from dioptra import pyplugs
-from dioptra.sdk.exceptions import (
-    ARTDependencyError,
-    TensorflowDependencyError,
-)
+from dioptra.sdk.exceptions import ARTDependencyError, TensorflowDependencyError
 from dioptra.sdk.utilities.decorators import require_package
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -81,15 +77,7 @@ def create_adversarial_jsma_dataset(
     color_mode: str = "color" if image_size[2] == 3 else "grayscale"
     target_size: Tuple[int, int] = image_size[:2]
     adv_data_dir = Path(adv_data_dir)
-    """
-    attack = _init_jsma(
-        keras_classifier=keras_classifier,
-        batch_size=batch_size,
-        verbose = True,
-        theta = theta,
-        gamma = gamma
-    )
-    """
+
     attack = SaliencyMapMethod(
         classifier=keras_classifier,
         batch_size=batch_size,
@@ -109,7 +97,6 @@ def create_adversarial_jsma_dataset(
     )
     num_images = data_flow.n
     img_filenames = [Path(x) for x in data_flow.filenames]
-    class_names_list = sorted(data_flow.class_indices, key=data_flow.class_indices.get)
     distance_metrics_list = []  # distance_metrics_list or []
     distance_metrics_: Dict[str, List[List[float]]] = {"image": [], "label": []}
     for metric_name, _ in distance_metrics_list:
@@ -119,9 +106,7 @@ def create_adversarial_jsma_dataset(
         attack="jsma",
         num_batches=num_images // batch_size,
     )
-    # Here
-    n_classes = len(class_names_list)
-    # End
+
     for batch_num, (x, y) in enumerate(data_flow):
         if batch_num >= num_images // batch_size:
             break
@@ -130,7 +115,9 @@ def create_adversarial_jsma_dataset(
         ]
 
         LOGGER.info(
-            "Generate adversarial image batch", attack="jsma", batch_num=batch_num,
+            "Generate adversarial image batch",
+            attack="jsma",
+            batch_num=batch_num,
         )
 
         y_int = np.argmax(y, axis=1)
@@ -158,7 +145,7 @@ def create_adversarial_jsma_dataset(
 
 def _init_jsma(
     keras_classifier: KerasClassifier, batch_size: int, **kwargs
-) -> JSMAMethod:
+) -> SaliencyMapMethod:
     """Initializes :py:class:`~art.attacks.evasionCarliniLInfMethod`.
 
     Args:

@@ -27,7 +27,6 @@ import structlog
 from mlflow.tracking import MlflowClient
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
-
 LOGGER = structlog.get_logger()
 
 
@@ -59,7 +58,8 @@ def create_image_dataset(
     image_size: Tuple[int, int] = (28, 28),
 ):
     data_generator: ImageDataGenerator = ImageDataGenerator(
-        rescale=rescale, validation_split=validation_split,
+        rescale=rescale,
+        validation_split=validation_split,
     )
 
     return data_generator.flow_from_directory(

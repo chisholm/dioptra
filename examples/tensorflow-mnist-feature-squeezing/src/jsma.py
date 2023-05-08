@@ -103,13 +103,8 @@ def _coerce_int_to_bool(ctx, param, value):
     help="Name of model to load from registry",
 )
 @click.option(
-    "--model-version", type=click.STRING,
-)
-@click.option(
-    "--model-architecture",
-    type=click.Choice(["shallow_net", "le_net", "alex_net"], case_sensitive=False),
-    default="le_net",
-    help="Model architecture",
+    "--model-version",
+    type=click.STRING,
 )
 @click.option(
     "--batch-size",
@@ -118,7 +113,9 @@ def _coerce_int_to_bool(ctx, param, value):
     default=32,
 )
 @click.option(
-    "--theta", type=click.FLOAT, default="0.01",
+    "--theta",
+    type=click.FLOAT,
+    default="0.01",
 )
 @click.option(
     "--gamma",
@@ -127,10 +124,10 @@ def _coerce_int_to_bool(ctx, param, value):
     help=" Confidence of adversarial examples",
 )
 @click.option(
-    "--seed", type=click.INT, help="Set the entry point rng seed", default=-1,
-)
-@click.option(
-    "--verbose", type=click.BOOL, help="Show progress bars", default=True,
+    "--seed",
+    type=click.INT,
+    help="Set the entry point rng seed",
+    default=-1,
 )
 def jsma_attack(
     data_dir,
@@ -141,8 +138,6 @@ def jsma_attack(
     model_version,
     batch_size,
     seed,
-    model_architecture,
-    verbose,
     theta,
     gamma,
 ):
@@ -157,8 +152,6 @@ def jsma_attack(
         model_version=model_version,
         batch_size=batch_size,
         seed=seed,
-        model_architecture=model_architecture,
-        verbose=verbose,
         theta=theta,
         gamma=gamma,
     )
@@ -176,8 +169,6 @@ def jsma_attack(
                 model_version=model_version,
                 batch_size=batch_size,
                 seed=seed,
-                #               model_architecture=model_architecture,
-                #                verbose=verbose,
                 theta=theta,
                 gamma=gamma,
             )
@@ -198,8 +189,6 @@ def init_jsma_flow() -> Flow:
             model_version,
             batch_size,
             seed,
-            model_architecture,
-            verbose,
             theta,
             gamma,
         ) = (
@@ -212,8 +201,6 @@ def init_jsma_flow() -> Flow:
             Parameter("model_version"),
             Parameter("batch_size"),
             Parameter("seed"),
-            Parameter("model_architecture"),
-            Parameter("verbose"),
             Parameter("theta"),
             Parameter("gamma"),
         )

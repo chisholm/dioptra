@@ -97,7 +97,8 @@ def create_image_dataset(
     target_size: Tuple[int, int] = image_size[:2]
 
     data_generator: ImageDataGenerator = ImageDataGenerator(
-        rescale=rescale, validation_split=validation_split,
+        rescale=rescale,
+        validation_split=validation_split,
     )
 
     return data_generator.flow_from_directory(

@@ -23,10 +23,8 @@ entry_points:
       data_dir: {type: path, default: "/dioptra/data/Mnist"}
       model_name: {type: string, default: "mnist_le_net"}
       model_version: {type: string, default: "1"}
-      model_architecture: {type: string, default: "le_net"}
       batch_size: {type: float, default: 32}
       seed: {type: float, default: -1}
-      verbose: {type: string, default:"True"}
       theta: {type: float, default:0.1}
       gamma: {type: float, default:1.0}
       adv_tar_name: { type: string, default: "testing_adversarial_fgm.tar.gz" }
@@ -37,12 +35,10 @@ entry_points:
       --data-dir {data_dir}
       --model-name {model_name}
       --model-version {model_version}
-      --model-architecture {model_architecture}
       --batch-size {batch_size}
       --seed {seed}
       --theta {theta}
       --gamma {gamma}
-      --verbose {verbose}
       --adv-tar-name {adv_tar_name}
       --adv-data-dir {adv_data_dir}
       --image-size {image_size}
@@ -53,13 +49,11 @@ entry_points:
       model_name: {type: string, default: "mobilenet"}
       model_version: {type: string, default: "1"}
       image_size: {type: string, default: "28,28"}
-      model_architecture: {type: string, default: "le_net"}
       batch_size: {type: float, default: 40}
       seed: {type: float, default: -1}
       max_iter: {type:float, default:10}
       nb_grads: {type:float, default:10}
       epsilon: {type:float, default:0.000001}
-      verbose: {type: string, default:"True"}
       
     command: >
       python deepfool.py
@@ -67,13 +61,11 @@ entry_points:
       --model-name {model_name}
       --model-version {model_version}
       --image-size {image_size}
-      --model-architecture {model_architecture}
       --batch-size {batch_size}
       --seed {seed}
       --max-iter {max_iter}
       --nb-grads {nb_grads}
       --epsilon {epsilon}
-      --verbose {verbose}
 
   cw_l2:
     parameters:

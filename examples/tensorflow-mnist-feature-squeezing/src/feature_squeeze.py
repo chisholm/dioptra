@@ -16,7 +16,6 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 
-import tarfile
 import warnings
 
 warnings.filterwarnings("ignore")
@@ -25,25 +24,22 @@ import tensorflow as tf
 
 tf.compat.v1.disable_eager_execution()
 
+import os
+from pathlib import Path
+from typing import Dict, List
+
 import click
 import mlflow
 import numpy as np
 import structlog
-import os
-from pathlib import Path
+from prefect import Flow, Parameter
 
-from tensorflow.keras.preprocessing.image import save_img
-from art.defences.preprocessor import FeatureSqueezing
-from typing import Dict, List
-
-from prefect import Flow, Parameter, task
 from dioptra import pyplugs
 from dioptra.sdk.utilities.contexts import plugin_dirs
 from dioptra.sdk.utilities.logging import (
     StderrLogStream,
     StdoutLogStream,
     attach_stdout_stream_handler,
-    clear_logger_handlers,
     configure_structlog,
     set_logging_level,
 )
@@ -67,12 +63,17 @@ def _coerce_comma_separated_ints(ctx, param, value):
 
 LOGGER = structlog.get_logger()
 
+
 @click.command()
 @click.option(
-    "--run-id", type=click.STRING, help="MLFlow Run ID of a successful fgm attack",
+    "--run-id",
+    type=click.STRING,
+    help="MLFlow Run ID of a successful fgm attack",
 )
 @click.option(
-    "--model", type=click.STRING, help="Name of model to load from registry",
+    "--model",
+    type=click.STRING,
+    help="Name of model to load from registry",
 )
 @click.option(
     "--model-architecture",
@@ -89,7 +90,10 @@ LOGGER = structlog.get_logger()
     default=32,
 )
 @click.option(
-    "--seed", type=click.INT, help="Set the entry point rng seed", default=-1,
+    "--seed",
+    type=click.INT,
+    help="Set the entry point rng seed",
+    default=-1,
 )
 @click.option(
     "--bit-depth",
@@ -117,7 +121,9 @@ LOGGER = structlog.get_logger()
     help="Directory for saving fgm images",
 )
 @click.option(
-    "--model-version", type=click.STRING, default="1",
+    "--model-version",
+    type=click.STRING,
+    default="1",
 )
 @click.option(
     "--image-size",
@@ -240,7 +246,7 @@ def init_squeeze_flow() -> Flow:
                 dataset_seed=dataset_seed,
             ),
         )
-        distance_metrics_list = pyplugs.call_task(
+        distance_metrics_list = pyplugs.call_task(  # noqa: F841
             f"{_PLUGINS_IMPORT_PATH}.metrics",
             "distance",
             "get_distance_metric_list",
@@ -271,7 +277,7 @@ def init_squeeze_flow() -> Flow:
             upstream_tasks=[init_tensorflow_results, extract_tarfile_results],
         )
 
-        feature_squeeze = pyplugs.call_task(
+        feature_squeeze = pyplugs.call_task(  # noqa: F841
             f"{_CUSTOM_PLUGINS_IMPORT_PATH}.feature_squeezing",
             "squeeze_plugin",
             "feature_squeeze",
@@ -289,26 +295,6 @@ def init_squeeze_flow() -> Flow:
             image_size=image_size,
             upstream_tasks=[make_directories_results],
         )
-        """
-        log_evasion_dataset_result = pyplugs.call_task(  # noqa: F841
-            f"{_PLUGINS_IMPORT_PATH}.artifacts",
-            "mlflow",
-            "upload_directory_as_tarball_artifact",
-            source_dir=data_dir,
-            tarball_filename=adv_tar_name,
-            upstream_tasks=[distance_metrics],
-        )
-        
-        log_distance_metrics_result = pyplugs.call_task(  # noqa: F841
-            f"{_PLUGINS_IMPORT_PATH}.artifacts",
-            "mlflow",
-            "upload_data_frame_artifact",
-            data_frame=distance_metrics,
-            file_name=distance_metrics_filename,
-            file_format="csv.gz",
-            file_format_kwargs=dict(index=False),
-        )
-        """
     return flow
 
 

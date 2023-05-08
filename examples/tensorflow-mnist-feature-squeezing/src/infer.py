@@ -37,6 +37,7 @@ from dioptra.sdk.utilities.logging import (
     configure_structlog,
     set_logging_level,
 )
+
 _CUSTOM_PLUGINS_IMPORT_PATH: str = "dioptra_custom"
 _PLUGINS_IMPORT_PATH: str = "dioptra_builtins"
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -200,7 +201,7 @@ def init_infer_flow() -> Flow:
             "evaluate_metrics_tensorflow",
             classifier=classifier,
             dataset=adv_ds,
-            upstream_tasks=[classifier]
+            upstream_tasks=[classifier],
         )
         log_classifier_performance_metrics_result = pyplugs.call_task(  # noqa: F841
             f"{_PLUGINS_IMPORT_PATH}.tracking",

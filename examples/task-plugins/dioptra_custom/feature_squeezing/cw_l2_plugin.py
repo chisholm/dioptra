@@ -16,28 +16,24 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from __future__ import annotations
 
+import random
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Tuple
 
 import mlflow
 import numpy as np
 import pandas as pd
 import scipy.stats
 import structlog
-import random
 from structlog.stdlib import BoundLogger
 
 from dioptra import pyplugs
-from dioptra.sdk.exceptions import (
-    ARTDependencyError,
-    TensorflowDependencyError,
-)
+from dioptra.sdk.exceptions import ARTDependencyError, TensorflowDependencyError
 from dioptra.sdk.utilities.decorators import require_package
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 try:
-    from art.attacks.evasion import CarliniLInfMethod
     from art.attacks.evasion import CarliniL2Method
     from art.estimators.classification import KerasClassifier
 
@@ -149,7 +145,9 @@ def create_adversarial_cw_l2_dataset(
         y_target = np.tile(y_one_hot, (x.shape[0], 1))
         adv_batch = attack.generate(x=x, y=y_target)  # ,y_target=y_target)
         LOGGER.info(
-            "Saving adversarial image batch", attack="cw_l2", batch_num=batch_num,
+            "Saving adversarial image batch",
+            attack="cw_l2",
+            batch_num=batch_num,
         )
         _save_adv_batch(
             adv_batch, adv_data_dir, y_int, clean_filenames  # ,class_names_list

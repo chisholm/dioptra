@@ -87,7 +87,10 @@ def _coerce_comma_separated_ints(ctx, param, value):
     help="Model architecture",
 )
 @click.option(
-    "--epochs", type=click.INT, help="Number of epochs to train model", default=30,
+    "--epochs",
+    type=click.INT,
+    help="Number of epochs to train model",
+    default=30,
 )
 @click.option(
     "--batch-size",
@@ -120,7 +123,10 @@ def _coerce_comma_separated_ints(ctx, param, value):
     default=0.2,
 )
 @click.option(
-    "--seed", type=click.INT, help="Set the entry point rng seed", default=-1,
+    "--seed",
+    type=click.INT,
+    help="Set the entry point rng seed",
+    default=-1,
 )
 def train(
     data_dir,
@@ -322,17 +328,17 @@ def init_train_flow() -> Flow:
             "evaluate_metrics_tensorflow",
             classifier=classifier,
             dataset=testing_ds,
-            upstream_tasks=[history]
+            upstream_tasks=[history],
         )
-        
+
         log_classifier_performance_metrics_result = pyplugs.call_task(  # noqa: F841
             f"{_PLUGINS_IMPORT_PATH}.tracking",
             "mlflow",
             "log_metrics",
             metrics=classifier_performance_metrics,
         )
-        
-        logged_tensorflow_keras_estimator = pyplugs.call_task(
+
+        logged_tensorflow_keras_estimator = pyplugs.call_task(  # noqa: F841
             f"{_PLUGINS_IMPORT_PATH}.tracking",
             "mlflow",
             "log_tensorflow_keras_estimator",
@@ -340,7 +346,6 @@ def init_train_flow() -> Flow:
             model_dir="model",
             upstream_tasks=[history],
         )
-
 
         model_version = pyplugs.call_task(  # noqa: F841
             f"{_PLUGINS_IMPORT_PATH}.registry",

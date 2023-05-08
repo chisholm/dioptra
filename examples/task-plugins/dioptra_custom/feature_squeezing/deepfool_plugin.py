@@ -19,22 +19,17 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Tuple
 
 import mlflow
 import numpy as np
 import pandas as pd
 import scipy.stats
 import structlog
-import random
 from structlog.stdlib import BoundLogger
 
-
 from dioptra import pyplugs
-from dioptra.sdk.exceptions import (
-    ARTDependencyError,
-    TensorflowDependencyError,
-)
+from dioptra.sdk.exceptions import ARTDependencyError, TensorflowDependencyError
 from dioptra.sdk.utilities.decorators import require_package
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -99,7 +94,6 @@ def create_adversarial_deepfool_dataset(
         nb_grads=nb_grads,
         max_iter=max_iter,
     )
-    classifier = keras_classifier
     LOGGER.info("Deepfool Batch Size: ", batch_size=batch_size)
     adv_data_dir = Path(adv_data_dir)
     data_generator: ImageDataGenerator = ImageDataGenerator(rescale=rescale)
@@ -139,7 +133,9 @@ def create_adversarial_deepfool_dataset(
         ]
 
         LOGGER.info(
-            "Generate adversarial image batch", attack="deepfool", batch_num=batch_num,
+            "Generate adversarial image batch",
+            attack="deepfool",
+            batch_num=batch_num,
         )
 
         y_int = np.argmax(y, axis=1)

@@ -104,21 +104,16 @@ def _coerce_int_to_bool(ctx, param, value):
 )
 @click.option("--model-version", type=click.STRING, default="1")
 @click.option(
-    "--model-architecture",
-    type=click.Choice(
-        ["shallow_net", "le_net", "alex_net", "mobilenet"], case_sensitive=False
-    ),
-    default="mobilenet",
-    help="Model architecture",
-)
-@click.option(
     "--batch-size",
     type=click.INT,
     help="Batch size to use when training a single epoch",
     default=32,
 )
 @click.option(
-    "--max-iter", type=click.INT, help="The maximum number of iterations", default=10,
+    "--max-iter",
+    type=click.INT,
+    help="The maximum number of iterations",
+    default=10,
 )
 @click.option(
     "--nb-grads",
@@ -127,13 +122,16 @@ def _coerce_int_to_bool(ctx, param, value):
     default=10,
 )
 @click.option(
-    "--epsilon", type=click.FLOAT, help="Oversoot parameter", default=0.000001,
+    "--epsilon",
+    type=click.FLOAT,
+    help="Oversoot parameter",
+    default=0.000001,
 )
 @click.option(
-    "--seed", type=click.INT, help="Set the entry point rng seed", default=-1,
-)
-@click.option(
-    "--verbose", type=click.BOOL, help="Show progress bars", default=True,
+    "--seed",
+    type=click.INT,
+    help="Set the entry point rng seed",
+    default=-1,
 )
 def deepfool_attack(
     data_dir,
@@ -144,11 +142,9 @@ def deepfool_attack(
     model_version,
     batch_size,
     seed,
-    model_architecture,
     max_iter,
     nb_grads,
     epsilon,
-    verbose,
 ):
     LOGGER.info(
         "Execute MLFlow entry point",
@@ -161,11 +157,9 @@ def deepfool_attack(
         model_version=model_version,
         batch_size=batch_size,
         seed=seed,
-        model_architecture=model_architecture,
         max_iter=max_iter,
         nb_grads=nb_grads,
         epsilon=epsilon,
-        verbose=verbose,
     )
 
     with mlflow.start_run() as active_run:  # noqa: F841
@@ -184,8 +178,6 @@ def deepfool_attack(
                 max_iter=max_iter,
                 nb_grads=nb_grads,
                 epsilon=epsilon,
-                # model_architecture=model_architecture,
-                # verbose=verbose,
             )
         )
 
@@ -204,8 +196,6 @@ def init_deepfool_flow() -> Flow:
             model_version,
             batch_size,
             seed,
-            model_architecture,
-            verbose,
             max_iter,
             nb_grads,
             epsilon,
@@ -219,8 +209,6 @@ def init_deepfool_flow() -> Flow:
             Parameter("model_version"),
             Parameter("batch_size"),
             Parameter("seed"),
-            Parameter("model_architecture"),
-            Parameter("verbose"),
             Parameter("max_iter"),
             Parameter("nb_grads"),
             Parameter("epsilon"),

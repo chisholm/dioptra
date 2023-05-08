@@ -16,48 +16,34 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 
-import datetime
-import os
 import warnings
-from pathlib import Path
-from typing import Optional
 
-warnings.filterwarnings("ignore")
-
-import tensorflow as tf
-
-tf.compat.v1.disable_eager_execution()
-
-import click
 import mlflow
 import mlflow.tensorflow
-from mlflow.tracking.client import MlflowClient
 import numpy as np
 import structlog
-
+import tensorflow as tf
+from tensorflow.keras.applications.mobilenet import MobileNet
+from tensorflow.keras.applications.resnet import ResNet50
+from tensorflow.keras.applications.vgg16 import VGG16
 from tensorflow.keras.metrics import (
-    TruePositives,
-    FalsePositives,
-    TrueNegatives,
-    FalseNegatives,
+    AUC,
     CategoricalAccuracy,
+    FalseNegatives,
+    FalsePositives,
     Precision,
     Recall,
-    AUC,
+    TrueNegatives,
+    TruePositives,
 )
+from tensorflow.keras.models import Sequential
+
 from dioptra import pyplugs
-from dioptra.sdk.exceptions import (
-    ARTDependencyError,
-    TensorflowDependencyError,
-)
+from dioptra.sdk.exceptions import ARTDependencyError, TensorflowDependencyError
 from dioptra.sdk.utilities.decorators import require_package
 
-from tensorflow.keras.applications.vgg16 import VGG16
-from tensorflow.keras.applications.resnet import ResNet50
-from tensorflow.keras.applications.mobilenet import MobileNet
-from tensorflow.keras.applications.mobilenet import preprocess_input
-from tensorflow.keras.models import Model
-from tensorflow.keras.models import Sequential
+tf.compat.v1.disable_eager_execution()
+warnings.filterwarnings("ignore")
 
 LOGGER = structlog.get_logger()
 
@@ -88,13 +74,6 @@ def model_mobilenet():
     )  # , classifier_activation=None)
 
 
-# Evaluate metrics against a chosen dataset
-
-
-def my_categorical_crossentropy(y_true, y_pred):
-    return K.sparse_categorical_crossentropy(y_true, y_pred, from_logits=True)
-
-
 def evaluate_metrics(model, testing_ds):
     LOGGER.info("evaluating classification metrics using testing images")
     result = model.evaluate(testing_ds, verbose=0)
@@ -116,13 +95,12 @@ def evaluate_metrics(model, testing_ds):
 def load_and_test_model(
     data_dir, model_architecture, batch_size, seed, register_model_name
 ):
-
     rng = np.random.default_rng(seed if seed >= 0 else None)
     if seed < 0:
         seed = rng.bit_generator._seed_seq.entropy
 
-    tensorflow_global_seed: int = rng.integers(low=0, high=2 ** 31 - 1)
-    dataset_seed: int = rng.integers(low=0, high=2 ** 31 - 1)
+    tensorflow_global_seed: int = rng.integers(low=0, high=2**31 - 1)
+    dataset_seed: int = rng.integers(low=0, high=2**31 - 1)
 
     tf.random.set_seed(tensorflow_global_seed)
     mlflow.tensorflow.autolog()
@@ -154,7 +132,8 @@ def load_and_test_model(
         newmodel.summary()
 
         newmodel.compile(
-            loss="categorical_crossentropy", metrics=METRICS,
+            loss="categorical_crossentropy",
+            metrics=METRICS,
         )
 
         mlflow.keras.log_model(
@@ -166,28 +145,14 @@ def load_and_test_model(
     model = model_collection[model_architecture]()
     model.summary()
     model.compile(
-        loss="categorical_crossentropy", metrics=METRICS,
+        loss="categorical_crossentropy",
+        metrics=METRICS,
     )
     if model_architecture != "mobilenet":
         mlflow.keras.log_model(
-            keras_model=model, artifact_path="model", registered_model_name=model_name,
+            keras_model=model,
+            artifact_path="model",
+            registered_model_name=model_name,
         )
-    """
-    dataset = Path(data_dir)
-    ds = create_image_dataset(
-        data_dir=dataset.resolve(),
-        subset=None,
-        validation_split=None,
-        batch_size=batch_size,
-        model_architecture=model_architecture,
-    )
-    
-    evaluate_metrics(model=model, testing_ds=ds)
-    """
+
     return model
-
-
-if __name__ == "__main__":
-    configure_stdlib_logger("INFO", log_filepath=None)
-    configure_structlog_logger("console")
-    load_and_test_model()
