@@ -6,7 +6,7 @@
 #
 -e file:.#egg=dioptra
     # via -r requirements-dev.in
-adversarial-robustness-toolbox==1.14.0
+adversarial-robustness-toolbox==1.14.1
     # via dioptra (pyproject.toml)
 aiofiles==22.1.0
     # via ypy-websocket
@@ -18,7 +18,7 @@ aiosqlite==0.19.0
     # via ypy-websocket
 alabaster==0.7.13
     # via sphinx
-alembic==1.10.3
+alembic==1.10.4
     # via
     #   dioptra
     #   dioptra (pyproject.toml)
@@ -68,11 +68,11 @@ binaryornot==0.4.4
     # via cookiecutter
 bleach==6.0.0
     # via nbconvert
-boto3==1.26.116
+boto3==1.26.131
     # via
     #   dioptra
     #   dioptra (pyproject.toml)
-botocore==1.29.116
+botocore==1.29.131
     # via
     #   boto3
     #   s3transfer
@@ -84,7 +84,7 @@ cachetools==5.3.0
     # via tox
 cattrs==22.2.0
     # via lsprotocol
-certifi==2022.12.7
+certifi==2023.5.7
     # via
     #   kaggle
     #   requests
@@ -139,11 +139,11 @@ cryptography==3.4.8
     # via dioptra (pyproject.toml)
 cycler==0.11.0
     # via matplotlib
-dask==2023.4.0
+dask==2023.4.1
     # via
     #   distributed
     #   prefect
-databricks-cli==0.17.6
+databricks-cli==0.17.7
     # via mlflow
 debugpy==1.6.7
     # via ipykernel
@@ -153,11 +153,11 @@ defusedxml==0.7.1
     # via nbconvert
 distlib==0.3.6
     # via virtualenv
-distributed==2023.4.0
+distributed==2023.4.1
     # via prefect
 dnspython==2.3.0
     # via email-validator
-docker==6.0.1
+docker==6.1.1
     # via
     #   mlflow
     #   prefect
@@ -238,7 +238,7 @@ frozenlist==1.3.3
     # via
     #   aiohttp
     #   aiosignal
-fsspec==2023.4.0
+fsspec==2023.5.0
     # via
     #   dask
     #   universal-pathlib
@@ -255,7 +255,7 @@ idna==3.4
     #   jsonschema
     #   requests
     #   yarl
-imageio==2.27.0
+imageio==2.28.1
     # via
     #   imgaug
     #   scikit-image
@@ -263,7 +263,7 @@ imagesize==1.4.1
     # via sphinx
 imgaug==0.4.0
     # via dioptra (pyproject.toml)
-importlib-metadata==6.5.0
+importlib-metadata==6.6.0
     # via
     #   dask
     #   flask
@@ -282,7 +282,7 @@ injector==0.20.1
     #   dioptra
     #   dioptra (pyproject.toml)
     #   flask-injector
-ipykernel==6.22.0
+ipykernel==6.23.0
     # via
     #   dioptra (pyproject.toml)
     #   ipywidgets
@@ -291,7 +291,7 @@ ipykernel==6.22.0
     #   nbclassic
     #   notebook
     #   qtconsole
-ipython==8.12.0
+ipython==8.13.2
     # via
     #   dioptra (pyproject.toml)
     #   ipykernel
@@ -460,13 +460,13 @@ multimethod==1.9.1
     #   dioptra (pyproject.toml)
 mypy-extensions==1.0.0
     # via prefect
-nbclassic==0.5.5
+nbclassic==1.0.0
     # via
     #   jupyterlab
     #   notebook
-nbclient==0.7.3
+nbclient==0.7.4
     # via nbconvert
-nbconvert==7.3.1
+nbconvert==7.4.0
     # via
     #   dioptra (pyproject.toml)
     #   jupyter
@@ -491,9 +491,9 @@ notebook==6.5.4
     # via
     #   jupyter
     #   jupyterlab
-notebook-shim==0.2.2
+notebook-shim==0.2.3
     # via nbclassic
-numpy==1.24.2
+numpy==1.24.3
     # via
     #   adversarial-robustness-toolbox
     #   contourpy
@@ -537,7 +537,7 @@ packaging==23.1
     #   scikit-image
     #   sphinx
     #   tox
-pandas==2.0.0
+pandas==2.0.1
     # via
     #   dioptra
     #   dioptra (pyproject.toml)
@@ -565,7 +565,7 @@ pillow==9.5.0
     #   scikit-image
 pip-tools==6.13.0
     # via dioptra (pyproject.toml)
-platformdirs==3.2.0
+platformdirs==3.5.0
     # via
     #   jupyter-core
     #   tox
@@ -580,13 +580,13 @@ prometheus-client==0.16.0
     #   nbclassic
     #   notebook
     #   prometheus-flask-exporter
-prometheus-flask-exporter==0.22.3
+prometheus-flask-exporter==0.22.4
     # via mlflow
 prompt-toolkit==3.0.38
     # via
     #   ipython
     #   jupyter-console
-protobuf==4.22.3
+protobuf==4.23.0
     # via mlflow
 psutil==5.9.5
     # via
@@ -594,7 +594,7 @@ psutil==5.9.5
     #   ipykernel
 pure-eval==0.2.2
     # via stack-data
-pyarrow==11.0.0
+pyarrow==12.0.0
     # via dioptra (pyproject.toml)
 pycodestyle==2.10.0
     # via
@@ -617,7 +617,7 @@ pygments==2.15.1
     #   qtconsole
     #   rich
     #   sphinx
-pyjwt==2.6.0
+pyjwt==2.7.0
     # via databricks-cli
 pyparsing==3.0.9
     # via matplotlib
@@ -627,7 +627,7 @@ pyproject-hooks==1.0.0
     # via build
 pyrsistent==0.19.3
     # via jsonschema
-pyspellchecker==0.7.1
+pyspellchecker==0.7.2
     # via esbonio
 python-box==7.0.1
     # via prefect
@@ -689,18 +689,18 @@ pyzmq==25.0.2
     #   nbclassic
     #   notebook
     #   qtconsole
-qtconsole==5.4.2
+qtconsole==5.4.3
     # via jupyter
 qtpy==2.3.1
     # via qtconsole
 querystring-parser==1.2.4
     # via mlflow
-redis==4.5.4
+redis==4.5.5
     # via
     #   dioptra
     #   dioptra (pyproject.toml)
     #   rq
-requests==2.28.2
+requests==2.30.0
     # via
     #   cookiecutter
     #   databricks-cli
@@ -720,13 +720,13 @@ rfc3986-validator==0.1.1
     # via
     #   jsonschema
     #   jupyter-events
-rich==13.3.4
+rich==13.3.5
     # via dioptra (pyproject.toml)
-rq==1.13.0
+rq==1.14.1
     # via
     #   dioptra
     #   dioptra (pyproject.toml)
-s3transfer==0.6.0
+s3transfer==0.6.1
     # via boto3
 scikit-image==0.20.0
     # via imgaug
@@ -743,7 +743,7 @@ scipy==1.9.1
     #   mlflow
     #   scikit-image
     #   scikit-learn
-send2trash==1.8.0
+send2trash==1.8.2
     # via
     #   jupyter-server
     #   nbclassic
@@ -790,7 +790,7 @@ sphinxcontrib-qthelp==1.0.3
     # via sphinx
 sphinxcontrib-serializinghtml==1.1.5
     # via sphinx
-sqlalchemy==1.4.47
+sqlalchemy==1.4.48
     # via
     #   alembic
     #   dioptra
@@ -843,7 +843,7 @@ toolz==0.12.0
     #   dask
     #   distributed
     #   partd
-tornado==6.3
+tornado==6.3.1
     # via
     #   distributed
     #   ipykernel
@@ -853,7 +853,7 @@ tornado==6.3
     #   nbclassic
     #   notebook
     #   terminado
-tox==4.4.12
+tox==4.5.1
     # via dioptra (pyproject.toml)
 tqdm==4.65.0
     # via
@@ -894,12 +894,13 @@ uri-template==1.2.0
 urllib3==1.26.15
     # via
     #   botocore
+    #   databricks-cli
     #   distributed
     #   docker
     #   kaggle
     #   prefect
     #   requests
-virtualenv==20.22.0
+virtualenv==20.23.0
     # via tox
 waitress==2.1.2
     # via mlflow
@@ -937,7 +938,7 @@ y-py==0.5.9
     # via
     #   jupyter-ydoc
     #   ypy-websocket
-yarl==1.8.2
+yarl==1.9.2
     # via aiohttp
 ypy-websocket==0.8.2
     # via jupyter-server-ydoc
