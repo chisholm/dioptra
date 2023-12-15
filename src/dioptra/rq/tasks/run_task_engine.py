@@ -33,7 +33,7 @@ from dioptra.mlflow_plugins.dioptra_tags import (
 )
 from dioptra.task_engine.task_engine import run_experiment
 from dioptra.task_engine.validation import is_valid
-from dioptra.worker.setup_task_plugins import setup_task_plugins
+from dioptra.worker.s3_download import setup_task_plugins
 
 
 def _get_logger() -> Any:

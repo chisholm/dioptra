@@ -25,7 +25,7 @@ from dioptra.sdk.utilities.logging import (
     attach_stdout_stream_handler,
     configure_structlog,
 )
-from dioptra.worker.setup_task_plugins import setup_task_plugins
+from dioptra.worker.s3_download import setup_task_plugins
 
 
 def parse_args() -> argparse.Namespace:
