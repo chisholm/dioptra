@@ -31,7 +31,7 @@ from dioptra.worker.s3_download import s3_download
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="""
-        Setup a task plugins directory, with content downloaded from S3.
+        Download file(s) from S3 to a directory.
         """
     )
 
