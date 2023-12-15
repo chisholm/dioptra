@@ -57,7 +57,7 @@ def _normalize_s3_prefix(prefix: str) -> str:
     return prefix
 
 
-def setup_task_plugins(
+def s3_download(
     s3: BaseClient, dioptra_plugin_dir: Union[str, Path], *s3_uris: str
 ):
     """

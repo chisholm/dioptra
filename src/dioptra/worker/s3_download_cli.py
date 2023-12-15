@@ -25,7 +25,7 @@ from dioptra.sdk.utilities.logging import (
     attach_stdout_stream_handler,
     configure_structlog,
 )
-from dioptra.worker.s3_download import setup_task_plugins
+from dioptra.worker.s3_download import s3_download
 
 
 def parse_args() -> argparse.Namespace:
@@ -107,7 +107,7 @@ def main() -> None:
 
     s3 = boto3.client("s3", endpoint_url=args.endpoint_url)
 
-    setup_task_plugins(s3, args.dest_dir, *args.s3_uri)
+    s3_download(s3, args.dest_dir, *args.s3_uri)
 
 
 if __name__ == "__main__":
