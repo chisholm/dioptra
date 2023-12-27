@@ -50,7 +50,7 @@ def parse_args() -> argparse.Namespace:
         help="""
         The directory to download to.  Default: "%(default)s"
         """,
-        default="."
+        default=".",
     )
 
     parser.add_argument(
@@ -59,7 +59,7 @@ def parse_args() -> argparse.Namespace:
         help="""
         Clear the destination directory
         """,
-        action="store_true"
+        action="store_true",
     )
 
     parser.add_argument(
@@ -72,7 +72,7 @@ def parse_args() -> argparse.Namespace:
         component) are used to name the files created in the destination
         directory.
         """,
-        action="store_true"
+        action="store_true",
     )
 
     parser.add_argument(
@@ -129,10 +129,7 @@ def main() -> None:
 
     s3 = boto3.client("s3", endpoint_url=args.endpoint_url)
 
-    s3_download(
-        s3, args.dest_dir, args.clear, args.preserve_paths,
-        *args.s3_uri
-    )
+    s3_download(s3, args.dest_dir, args.clear, args.preserve_paths, *args.s3_uri)
 
 
 if __name__ == "__main__":

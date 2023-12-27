@@ -62,7 +62,7 @@ def s3_download(
     dest_dir: Union[str, Path],
     clear_dest: bool = False,
     preserve_key_paths: bool = False,
-    *s3_uris: str
+    *s3_uris: str,
 ):
     """
     Download files from S3 buckets to the local filesystem.
