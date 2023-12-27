@@ -48,9 +48,31 @@ def parse_args() -> argparse.Namespace:
         "-d",
         "--dest-dir",
         help="""
-        The directory to download to
+        The directory to download to.  Default: "%(default)s"
         """,
-        required=True,
+        default="."
+    )
+
+    parser.add_argument(
+        "-c",
+        "--clear",
+        help="""
+        Clear the destination directory
+        """,
+        action="store_true"
+    )
+
+    parser.add_argument(
+        "-p",
+        "--preserve-paths",
+        help="""
+        Treat keys as paths and create that directory structure in the
+        filesystem.  If not given, any key structure is flattened: directory
+        structure is ignored, and filename path components (the last path
+        component) are used to name the files created in the destination
+        directory.
+        """,
+        action="store_true"
     )
 
     parser.add_argument(
@@ -107,7 +129,10 @@ def main() -> None:
 
     s3 = boto3.client("s3", endpoint_url=args.endpoint_url)
 
-    s3_download(s3, args.dest_dir, *args.s3_uri)
+    s3_download(
+        s3, args.dest_dir, args.clear, args.preserve_paths,
+        *args.s3_uri
+    )
 
 
 if __name__ == "__main__":
