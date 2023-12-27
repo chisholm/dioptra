@@ -90,6 +90,8 @@ def run_task_engine_task(
             s3_download(
                 s3,
                 dioptra_plugin_dir,
+                True,
+                True,
                 dioptra_plugins_s3_uri,
                 dioptra_custom_plugins_s3_uri,
             )
