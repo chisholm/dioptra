@@ -47,11 +47,11 @@ def _download_workflow(s3: BaseClient, dest_dir: str, workflow_uri: str):
         dest_dir: A directory, as a str
         workflow_uri: An S3 URI referring to a file
     """
-    _, key = s3_uri_to_bucket_prefix(workflow_uri)
+    bucket, key = s3_uri_to_bucket_prefix(workflow_uri)
     dest_file = Path(key).name  # get the last path component (a filename)
     dest_path = Path(dest_dir) / dest_file
 
-    download_file_uri(s3, dest_path, workflow_uri)
+    s3.download_file(bucket, key, str(dest_path))
 
 
 def run_mlflow_task(
