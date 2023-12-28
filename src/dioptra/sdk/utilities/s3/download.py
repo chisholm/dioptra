@@ -136,27 +136,3 @@ def download_files(
 
         log.debug("Downloading s3 key %s -> %s", key, str(key_path))
         s3.download_file(bucket, key, str(key_path))
-
-
-def download_file_uri(s3: BaseClient, dest_file: Union[str, Path], s3_uri: str):
-    """
-    Download a file from an S3 bucket.  This function variant does not search
-    keys in the bucket, which is necessary in contexts where key listing is
-    disallowed by security policy.
-
-    Args:
-        s3: A boto3 S3 client object
-        dest_file: A string or Path object referring to the file to create.
-        s3_uri: An S3 URI in the form "s3://<bucket>/<key>".  The key will be
-            interpreted as complete, not just a prefix, so it must exist in
-            the bucket.
-    """
-    log = _get_logger()
-
-    bucket, key = s3_uri_to_bucket_prefix(s3_uri)
-
-    if not bucket:
-        raise ValueError("S3 URIs must include a bucket: " + s3_uri)
-
-    log.debug("Downloading s3 key %s -> %s", key, dest_file)
-    s3.download_file(bucket, key, str(dest_file))

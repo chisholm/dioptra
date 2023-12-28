@@ -29,7 +29,6 @@ from rq.job import Job as RQJob
 from rq.job import get_current_job
 from structlog.stdlib import BoundLogger
 
-from dioptra.sdk.utilities.s3.download import download_file_uri
 from dioptra.sdk.utilities.s3.uri import s3_uri_to_bucket_prefix
 from dioptra.worker.s3_download import s3_download
 
