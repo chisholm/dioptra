@@ -65,7 +65,9 @@ def s3_download(
     *s3_uris: str,
 ):
     """
-    Download files from S3 buckets to the local filesystem.
+    Download files from S3 buckets to the local filesystem.  This function is
+    intended as an implementation of a S3 CLI tool and programmatic API with
+    some extra conveniences beyond the base S3 utility functions.
 
     Args:
         s3: A boto3 S3 client object

@@ -17,19 +17,41 @@
 import os
 import shlex
 import subprocess
+from pathlib import Path
 from subprocess import CompletedProcess
 from tempfile import TemporaryDirectory
 from typing import List, Optional
 
 import boto3
 import structlog
+from botocore.client import BaseClient
 from rq.job import Job as RQJob
 from rq.job import get_current_job
 from structlog.stdlib import BoundLogger
 
+from dioptra.sdk.utilities.s3.download import download_file_uri
+from dioptra.sdk.utilities.s3.uri import s3_uri_to_bucket_prefix
 from dioptra.worker.s3_download import s3_download
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
+
+
+def _download_workflow(s3: BaseClient, dest_dir: str, workflow_uri: str):
+    """
+    Download the file pointed to by workflow_uri, to directory dest_dir.
+    Directory structure implied by workflow_uri is not mirrored in the local
+    filesystem.
+
+    Args:
+        s3: A boto3 S3 client object
+        dest_dir: A directory, as a str
+        workflow_uri: An S3 URI referring to a file
+    """
+    _, key = s3_uri_to_bucket_prefix(workflow_uri)
+    dest_file = Path(key).name  # get the last path component (a filename)
+    dest_path = Path(dest_dir) / dest_file
+
+    download_file_uri(s3, dest_path, workflow_uri)
 
 
 def run_mlflow_task(
@@ -77,7 +99,7 @@ def run_mlflow_task(
 
     with TemporaryDirectory(dir=os.getenv("DIOPTRA_WORKDIR")) as tmpdir:
         log.info("Downloading workflow: %s", workflow_uri)
-        s3_download(s3, tmpdir, False, False, workflow_uri)
+        _download_workflow(s3, tmpdir, workflow_uri)
 
         log.info("Downloading plugins")
         s3_download(
