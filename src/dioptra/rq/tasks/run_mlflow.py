@@ -44,7 +44,7 @@ def _download_workflow(s3: BaseClient, dest_dir: str, workflow_uri: str):
 
     Args:
         s3: A boto3 S3 client object
-        dest_dir: A directory, as a str
+        dest_dir: A directory, as a str, which must already exist
         workflow_uri: An S3 URI referring to a file
     """
     bucket, key = s3_uri_to_bucket_prefix(workflow_uri)
