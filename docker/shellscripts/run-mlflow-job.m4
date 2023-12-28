@@ -270,10 +270,10 @@ start_mlflow() {
 ###########################################################################################
 
 validate_mlflow_inputs
-clear_plugins_dirs
-sync_builtin_plugins
-sync_custom_plugins
-download_workflow
+# clear_plugins_dirs
+# sync_builtin_plugins
+# sync_custom_plugins
+# download_workflow
 unpack_workflow_archive
 start_mlflow
 # ] <-- needed because of Argbash

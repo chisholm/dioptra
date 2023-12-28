@@ -21,10 +21,13 @@ from subprocess import CompletedProcess
 from tempfile import TemporaryDirectory
 from typing import List, Optional
 
+import boto3
 import structlog
 from rq.job import Job as RQJob
 from rq.job import get_current_job
 from structlog.stdlib import BoundLogger
+
+from dioptra.worker.s3_download import s3_download
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -36,6 +39,19 @@ def run_mlflow_task(
     conda_env: str = "base",
     entry_point_kwargs: Optional[str] = None,
 ) -> CompletedProcess:
+    mlflow_s3_endpoint_url = os.getenv("MLFLOW_S3_ENDPOINT_URL")
+    dioptra_plugins_s3_uri = os.getenv("DIOPTRA_PLUGINS_S3_URI")
+    dioptra_custom_plugins_s3_uri = os.getenv("DIOPTRA_CUSTOM_PLUGINS_S3_URI")
+    dioptra_plugin_dir = os.getenv("DIOPTRA_PLUGIN_DIR")
+
+    # For mypy; assume correct environment variables
+    assert mlflow_s3_endpoint_url
+    assert dioptra_plugins_s3_uri
+    assert dioptra_custom_plugins_s3_uri
+    assert dioptra_plugin_dir
+
+    s3 = boto3.client("s3", endpoint_url=mlflow_s3_endpoint_url)
+
     cmd: List[str] = [
         "/usr/local/bin/run-mlflow-job.sh",
         "--s3-workflow",
@@ -60,6 +76,19 @@ def run_mlflow_task(
         cmd.extend(shlex.split(entry_point_kwargs))
 
     with TemporaryDirectory(dir=os.getenv("DIOPTRA_WORKDIR")) as tmpdir:
+        log.info("Downloading workflow: %s", workflow_uri)
+        s3_download(s3, tmpdir, False, False, workflow_uri)
+
+        log.info("Downloading plugins")
+        s3_download(
+            s3,
+            dioptra_plugin_dir,
+            True,
+            True,
+            dioptra_plugins_s3_uri,
+            dioptra_custom_plugins_s3_uri,
+        )
+
         log.info("Executing MLFlow job", cmd=" ".join(cmd))
         p = subprocess.run(args=cmd, cwd=tmpdir, env=env)
 

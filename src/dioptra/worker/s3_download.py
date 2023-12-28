@@ -81,7 +81,7 @@ def s3_download(
             discarded.  This causes a directory structure in the bucket to be
             flattened to list of filenames.  No subdirectories are created in
             this case.
-        s3_uris: S3 URIs to download task plugins from.
+        s3_uris: S3 URIs to download from.
     """
     log = _get_logger()
 
@@ -105,5 +105,5 @@ def s3_download(
         clear_directory(dest_dir_path)
 
     for s3_uri, (bucket, prefix) in zip(s3_uris, bucket_info):
-        log.info("Downloading plugins: %s", s3_uri)
+        log.info("Downloading: %s", s3_uri)
         download_files(s3, dest_dir_path, bucket, prefix, preserve_key_paths)
