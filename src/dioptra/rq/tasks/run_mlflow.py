@@ -59,6 +59,7 @@ def run_mlflow_task(
     experiment_id: str,
     conda_env: str = "base",
     entry_point_kwargs: Optional[str] = None,
+    s3: Optional[BaseClient] = None,
 ) -> CompletedProcess:
     mlflow_s3_endpoint_url = os.getenv("MLFLOW_S3_ENDPOINT_URL")
     dioptra_plugins_s3_uri = os.getenv("DIOPTRA_PLUGINS_S3_URI")
@@ -71,7 +72,8 @@ def run_mlflow_task(
     assert dioptra_custom_plugins_s3_uri
     assert dioptra_plugin_dir
 
-    s3 = boto3.client("s3", endpoint_url=mlflow_s3_endpoint_url)
+    if not s3:
+        s3 = boto3.client("s3", endpoint_url=mlflow_s3_endpoint_url)
 
     cmd: List[str] = [
         "/usr/local/bin/run-mlflow-job.sh",
