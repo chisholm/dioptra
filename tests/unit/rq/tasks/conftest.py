@@ -14,14 +14,16 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+import io
+from typing import Iterator
+
 import boto3
 import botocore.stub
-import io
 import pytest
+from botocore.client import BaseClient
 
 
 def _add_workflow_stubs(stubber: botocore.stub.Stubber) -> dict[str, dict[str, bytes]]:
-
     # No key listing mockup here: worker doesn't have permission to list keys
     # in the workflow bucket!
 
@@ -36,13 +38,19 @@ def _add_workflow_stubs(stubber: botocore.stub.Stubber) -> dict[str, dict[str, b
     stubber.add_response(
         "head_object",
         head_object_response,
-        {"Bucket": "workflow", "Key": "0ca807595bb4424c8dcc47a50a81f399/workflow.tar.gz"},
+        {
+            "Bucket": "workflow",
+            "Key": "0ca807595bb4424c8dcc47a50a81f399/workflow.tar.gz",
+        },
     )
 
     stubber.add_response(
         "get_object",
         workflow_get_object_response,
-        {"Bucket": "workflow", "Key": "0ca807595bb4424c8dcc47a50a81f399/workflow.tar.gz"},
+        {
+            "Bucket": "workflow",
+            "Key": "0ca807595bb4424c8dcc47a50a81f399/workflow.tar.gz",
+        },
     )
 
     bucket_info = {
@@ -55,7 +63,6 @@ def _add_workflow_stubs(stubber: botocore.stub.Stubber) -> dict[str, dict[str, b
 
 
 def _add_plugins_stubs(stubber: botocore.stub.Stubber) -> dict[str, dict[str, bytes]]:
-
     # Mock key listing responses
     # Split the builtins plugins listing into two pages, to test paging.
     builtins_keys_response_trunc = {
@@ -191,7 +198,7 @@ def _add_plugins_stubs(stubber: botocore.stub.Stubber) -> dict[str, dict[str, by
 
 
 @pytest.fixture
-def s3_stubbed_plugins():
+def s3_stubbed_plugins() -> Iterator[tuple[BaseClient, dict[str, dict[str, bytes]]]]:
     """
     Create a boto3 client for S3 which has stub responses for the plugins
     bucket, and some info about how it was stubbed, for use by unit tests.
@@ -205,14 +212,15 @@ def s3_stubbed_plugins():
 
     s3 = boto3.client("s3", endpoint_url="http://example.org/")
     with botocore.stub.Stubber(s3) as stubber:
-
         bucket_info_plugins = _add_plugins_stubs(stubber)
 
         yield s3, bucket_info_plugins
 
 
 @pytest.fixture
-def s3_stubbed_workflow_plugins():
+def s3_stubbed_workflow_plugins() -> (
+    Iterator[tuple[BaseClient, dict[str, dict[str, bytes]]]]
+):
     """
     Create a boto3 client for S3 which has stub responses for the workflow and
     plugins buckets, and some info about how it was stubbed, for use by unit
@@ -226,7 +234,6 @@ def s3_stubbed_workflow_plugins():
 
     s3 = boto3.client("s3", endpoint_url="http://example.org/")
     with botocore.stub.Stubber(s3) as stubber:
-
         # Order is important here: stub response order must match request
         # order.  Workflow is downloaded first, so it must be stubbed first.
         bucket_info_workflow = _add_workflow_stubs(stubber)

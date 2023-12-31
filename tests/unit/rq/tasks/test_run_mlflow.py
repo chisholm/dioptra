@@ -20,6 +20,7 @@ from pathlib import Path
 import rq
 import structlog
 from _pytest.monkeypatch import MonkeyPatch
+from botocore.client import BaseClient
 from freezegun import freeze_time
 from structlog.stdlib import BoundLogger
 
@@ -49,8 +50,11 @@ class MockCompletedProcess(object):
 
 
 @freeze_time("2020-08-17T19:46:28.717559")
-def test_run_mlflow_task(monkeypatch: MonkeyPatch, tmp_path: Path, s3_stubbed_workflow_plugins: dict[str, dict[str, bytes]]) -> None:
-
+def test_run_mlflow_task(
+    monkeypatch: MonkeyPatch,
+    tmp_path: Path,
+    s3_stubbed_workflow_plugins: tuple[BaseClient, dict[str, dict[str, bytes]]],
+) -> None:
     s3, bucket_info = s3_stubbed_workflow_plugins
 
     def mockgetcurrentjob(*args, **kwargs) -> MockRQJob:
