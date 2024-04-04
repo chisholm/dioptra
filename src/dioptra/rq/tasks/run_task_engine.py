@@ -15,6 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 import os
+import signal
 import tempfile
 from typing import Any, Mapping, MutableMapping, Optional
 
@@ -31,7 +32,7 @@ from dioptra.mlflow_plugins.dioptra_tags import (
     DIOPTRA_QUEUE,
 )
 from dioptra.sdk.utilities.paths import set_cwd
-from dioptra.task_engine.task_engine import run_experiment
+from dioptra.task_engine.task_engine import request_stop, run_experiment
 from dioptra.task_engine.validation import is_valid
 from dioptra.worker.s3_download import s3_download
 
@@ -65,6 +66,10 @@ def run_task_engine_task(
             normally used, but useful in unit tests when you need a specially
             configured object with stubbed responses.
     """
+
+    # Arrange for SIGTERM to request graceful shutdown of the experiment
+    signal.signal(signal.SIGTERM, lambda *args: request_stop())
+
     rq_job = get_current_job()
     rq_job_id = rq_job.get_id() if rq_job else None
 
