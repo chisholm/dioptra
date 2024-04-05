@@ -20,7 +20,6 @@ from typing import Any, Mapping, MutableMapping, Optional
 
 import boto3
 import mlflow
-import mlflow.entities
 import structlog
 from botocore.client import BaseClient
 from rq.job import get_current_job
@@ -155,7 +154,7 @@ def _run_experiment(
 
         if was_stopped:
             log.info("=== Run stopped ===")
-            mlflow.end_run(mlflow.entities.RunStatus.KILLED)
+            mlflow.end_run("KILLED")
             db_client.update_job_status(rq_job_id, "stopped")
         else:
             log.info("=== Run succeeded ===")
@@ -163,7 +162,7 @@ def _run_experiment(
             db_client.update_job_status(rq_job_id, "finished")
 
     except Exception:
-        mlflow.end_run(mlflow.entities.RunStatus.FAILED)
+        mlflow.end_run("FAILED")
 
         if db_client:
             db_client.update_job_status(rq_job_id, "failed")
