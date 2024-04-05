@@ -155,7 +155,8 @@ def _run_experiment(
         if was_stopped:
             log.info("=== Run stopped ===")
             mlflow.end_run("KILLED")
-            db_client.update_job_status(rq_job_id, "stopped")
+            # We don't have a job status value for "stopped" or "killed"...
+            db_client.update_job_status(rq_job_id, "failed")
         else:
             log.info("=== Run succeeded ===")
             mlflow.end_run()
