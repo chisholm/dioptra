@@ -35,7 +35,6 @@ from dioptra.sdk.exceptions.task_engine import (
 )
 from dioptra.task_engine import util
 
-
 _stop_requested = False
 
 
