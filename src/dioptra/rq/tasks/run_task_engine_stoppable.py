@@ -16,7 +16,7 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 import multiprocessing as mp
 import signal
-from typing import Any, Mapping, MutableMapping
+from typing import Any, Mapping, MutableMapping, cast
 
 import requests
 import structlog
@@ -42,8 +42,7 @@ def _get_logger() -> Any:
 
 
 def run_experiment_stoppable(
-    experiment_desc: Mapping[str, Any],
-    global_parameters: MutableMapping[str, Any]
+    experiment_desc: Mapping[str, Any], global_parameters: MutableMapping[str, Any]
 ) -> bool:
     """
     Run an experiment via the task engine.  This implementation runs it in a
@@ -59,8 +58,7 @@ def run_experiment_stoppable(
         True if the process was stopped prematurely; False if not
     """
     child_process = mp.Process(
-        target=_run_experiment_child_process,
-        args=(experiment_desc, global_parameters)
+        target=_run_experiment_child_process, args=(experiment_desc, global_parameters)
     )
 
     child_process.start()
@@ -73,8 +71,7 @@ def run_experiment_stoppable(
 
 
 def _run_experiment_child_process(
-    experiment_desc: Mapping[str, Any],
-    global_parameters: MutableMapping[str, Any]
+    experiment_desc: Mapping[str, Any], global_parameters: MutableMapping[str, Any]
 ) -> None:
     """
     Simple wrapper around run_experiment() which arranges for SIGTERM to
@@ -88,9 +85,7 @@ def _run_experiment_child_process(
 
     signal.signal(signal.SIGTERM, lambda *args: request_stop())
 
-    run_experiment(
-        experiment_desc, global_parameters
-    )
+    run_experiment(experiment_desc, global_parameters)
 
 
 def _monitor_process(child_process: mp.Process) -> bool:
@@ -125,8 +120,7 @@ def _monitor_process(child_process: mp.Process) -> bool:
             # Docs describe checking .exitcode, not .is_alive().
             if child_process.exitcode is None:
                 log.warning(
-                    "Graceful shutdown failed; killing pid: %d",
-                    child_process.pid
+                    "Graceful shutdown failed; killing pid: %d", child_process.pid
                 )
                 child_process.kill()
                 child_process.join()
@@ -146,16 +140,14 @@ def _should_stop() -> bool:
         True if it should be stopped; False if not
     """
     log = _get_logger()
+    value: bool
 
     resp = requests.get(_POLL_URL)
     if resp.ok:
-        value = resp.json()
+        value = cast(bool, resp.json())
 
     else:
-        log.warning(
-            "Polling endpoint returned http status: %d",
-            resp.status_code
-        )
+        log.warning("Polling endpoint returned http status: %d", resp.status_code)
         value = False
 
     return value

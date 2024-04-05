@@ -148,9 +148,7 @@ def _run_experiment(
 
         db_client.update_job_status(rq_job_id, "started")
 
-        was_stopped = run_experiment_stoppable(
-            experiment_desc, global_parameters
-        )
+        was_stopped = run_experiment_stoppable(experiment_desc, global_parameters)
 
         if was_stopped:
             log.info("=== Run stopped ===")
