@@ -15,12 +15,12 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 import os
-import signal
 import tempfile
 from typing import Any, Mapping, MutableMapping, Optional
 
 import boto3
 import mlflow
+import mlflow.entities
 import structlog
 from botocore.client import BaseClient
 from rq.job import get_current_job
@@ -31,8 +31,8 @@ from dioptra.mlflow_plugins.dioptra_tags import (
     DIOPTRA_JOB_ID,
     DIOPTRA_QUEUE,
 )
+from dioptra.rq.tasks.run_task_engine_stoppable import run_experiment_stoppable
 from dioptra.sdk.utilities.paths import set_cwd
-from dioptra.task_engine.task_engine import request_stop, run_experiment
 from dioptra.task_engine.validation import is_valid
 from dioptra.worker.s3_download import s3_download
 
@@ -66,9 +66,6 @@ def run_task_engine_task(
             normally used, but useful in unit tests when you need a specially
             configured object with stubbed responses.
     """
-
-    # Arrange for SIGTERM to request graceful shutdown of the experiment
-    signal.signal(signal.SIGTERM, lambda *args: request_stop())
 
     rq_job = get_current_job()
     rq_job_id = rq_job.get_id() if rq_job else None
@@ -152,14 +149,21 @@ def _run_experiment(
 
         db_client.update_job_status(rq_job_id, "started")
 
-        run_experiment(experiment_desc, global_parameters)
+        was_stopped = run_experiment_stoppable(
+            experiment_desc, global_parameters
+        )
 
-        log.info("=== Run succeeded ===")
-        mlflow.end_run()
-        db_client.update_job_status(rq_job_id, "finished")
+        if was_stopped:
+            log.info("=== Run stopped ===")
+            mlflow.end_run(mlflow.entities.RunStatus.KILLED)
+            db_client.update_job_status(rq_job_id, "stopped")
+        else:
+            log.info("=== Run succeeded ===")
+            mlflow.end_run()
+            db_client.update_job_status(rq_job_id, "finished")
 
     except Exception:
-        mlflow.end_run("FAILED")
+        mlflow.end_run(mlflow.entities.RunStatus.FAILED)
 
         if db_client:
             db_client.update_job_status(rq_job_id, "failed")
