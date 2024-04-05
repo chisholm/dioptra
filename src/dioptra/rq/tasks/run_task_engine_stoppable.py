@@ -144,6 +144,7 @@ def _should_stop() -> bool:
 
     resp = requests.get(_POLL_URL)
     if resp.ok:
+        # Depends on what the endpoint returns
         value = cast(bool, resp.json())
 
     else:
