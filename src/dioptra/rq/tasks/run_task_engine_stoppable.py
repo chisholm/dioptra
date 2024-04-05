@@ -24,7 +24,7 @@ import structlog
 from dioptra.task_engine.task_engine import request_stop, run_experiment
 
 # Which endpoint to poll
-_POLL_URL = "http://localhost:5000/get"
+_POLL_URL = "http://dioptra-deployment-restapi:5000/something"
 
 
 # Web server endpoint poll interval, in seconds
