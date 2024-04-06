@@ -16,9 +16,8 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 import multiprocessing as mp
 import signal
-from typing import Any, Mapping, MutableMapping, cast
+from typing import Any, Mapping, MutableMapping
 
-import requests
 import structlog
 
 from dioptra.task_engine.task_engine import request_stop, run_experiment
@@ -139,16 +138,14 @@ def _should_stop() -> bool:
     Returns:
         True if it should be stopped; False if not
     """
-    log = _get_logger()
-    value: bool
+    # resp = requests.get(_POLL_URL)
+    # if resp.ok:
+    #     # Depends on what the endpoint returns
+    #     value = cast(bool, resp.json())
+    #
+    # else:
+    #     log.warning("Polling endpoint returned http status: %d", resp.status_code)
+    #     value = False
 
-    resp = requests.get(_POLL_URL)
-    if resp.ok:
-        # Depends on what the endpoint returns
-        value = cast(bool, resp.json())
-
-    else:
-        log.warning("Polling endpoint returned http status: %d", resp.status_code)
-        value = False
-
+    value = False
     return value
